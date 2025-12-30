@@ -161,7 +161,7 @@ This tracking will be included in the final summary report.
   **Adaptations Made**: None - original task plan executed as designed
   ```
 
-- **Action** — ReadNextStepsGuide: Read `commands/flow/docs/next_steps_guide.md` to source relevant next step options.
+- **Action** — ReadNextStepsGuide: Read `.claude/spectre/next_steps_guide.md` to source relevant next step options.
 - **Action** — RenderFooter: End reply with single 60-column Next Steps footer using options from guide.
 
 ## Next Steps

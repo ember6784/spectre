@@ -133,7 +133,7 @@ $ARGUMENTS
 
 ## Next Steps
 
-- **Action** — ReadNextStepsGuide: Read `.spectre/next_steps_guide.md`
+- **Action** — ReadNextStepsGuide: Read `.claude/spectre/next_steps_guide.md`
 - **Action** — RenderFooter: End with Next Steps footer
 
 **Footer format:**

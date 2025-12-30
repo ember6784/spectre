@@ -430,7 +430,7 @@ ARGUMENTS -> $ARGUMENTS
   >
   > The Scope Definition is now complete with clear boundaries and minimal ambiguity, ready for the next phase.
 
-- **Action** — ReadNextStepsGuide: Read `.spectre/next_steps_guide.md` to source relevant next step options for current phase.
+- **Action** — ReadNextStepsGuide: Read `.claude/spectre/next_steps_guide.md` to source relevant next step options for current phase.
 
 - **Action** — RenderFooter: End reply with single 60-column Next Steps footer using options from guide; include up to 2 manual actions when appropriate.
 

@@ -12,6 +12,8 @@ SPECTRE guides AI agents through a structured workflow:
 
 Every prompt includes "next steps" suggestions, so you don't need to memorize commands—just follow the flow.
 
+> **Note**: SPECTRE creates `.claude/spectre/` in your project to store workflow reference files. Add `.claude/` to `.gitignore`.
+
 ---
 
 ## Quick Start: Pick Your Path

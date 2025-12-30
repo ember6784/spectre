@@ -222,7 +222,7 @@ $ARGUMENTS
 ## Step (7/7) - Document & Handoff
 
 - **Action** — PresentToUser: Show brief summary: "Task Documentation Created" with path, brief overview, and ready checklist (Scope ✅, Research ✅, Approach ✅, Plan ✅, Best practices ✅).
-- **Action** — ReadNextStepsGuide: Read `.spectre/next_steps_guide.md` to source relevant next step options for current phase.
+- **Action** — ReadNextStepsGuide: Read `.claude/spectre/next_steps_guide.md` to source relevant next step options for current phase.
 - **Action** — RenderFooter: End reply with single 60-column Next Steps footer using options from guide; include up to 2 manual actions when appropriate (no additional lists in body).
 
 ### Next Steps Footer Format

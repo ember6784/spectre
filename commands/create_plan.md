@@ -222,7 +222,7 @@ Notes: {Any additional guidance}
 
 - **Action** — ConfirmCompletion: Summarize completion.
   - Message: "🎯 Implementation Planning Complete — Ready for Next Phase. Process Completed: ✅ Codebase research consolidated; ✅ Technical clarifications addressed; ✅ Implementation plan documented and saved. Documents Updated: {PLAN_FILE}, task_context.md, task_summary.md"
-- **Action** — ReadNextStepsGuide: Read `commands/flow/docs/next_steps_guide.md` to source relevant next step options.
+- **Action** — ReadNextStepsGuide: Read `.claude/spectre/next_steps_guide.md` to source relevant next step options.
 - **Action** — RenderFooter: End reply with single 60-column Next Steps footer using options from guide.
   - **If** awaiting user input → include "💬 Reply" line.
   - **Else** → omit "💬 Reply" line.

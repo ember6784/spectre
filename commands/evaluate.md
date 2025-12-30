@@ -206,7 +206,7 @@ You are a principal systems architect reviewing delivered work.
   - `git add specs/{branch}/{feature_name}_documentation.md specs/{branch}/{feature_name}_architecture_review.md`
   - `git commit -m "docs({feature_name}): add feature documentation and architecture review"`
 
-- **Action** — ReadNextStepsGuide: Read `.spectre/next_steps_guide.md`
+- **Action** — ReadNextStepsGuide: Read `.claude/spectre/next_steps_guide.md`
 - **Action** — RenderFooter: End with Next Steps footer
 
 ## Next Steps

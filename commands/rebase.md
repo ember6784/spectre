@@ -147,7 +147,7 @@ Based on files touched during this rebase, manually verify:
   - Identify user-facing functionality affected
   - Generate specific test suggestions (not generic "test the app")
 
-- **Action** — ReadNextStepsGuide: Read `.spectre/next_steps_guide.md`
+- **Action** — ReadNextStepsGuide: Read `.claude/spectre/next_steps_guide.md`
 - **Action** — RenderFooter: End with Next Steps footer
 
 ## Next Steps

@@ -151,7 +151,7 @@ Be conservative — NEEDS_REVIEW when uncertain.
   - Format: `type(scope): description`
   - Each commit answers: What changed and why?
 
-- **Action** — ReadNextStepsGuide: Read `.spectre/next_steps_guide.md`
+- **Action** — ReadNextStepsGuide: Read `.claude/spectre/next_steps_guide.md`
 - **Action** — RenderFooter: End with Next Steps footer
   - Include: files cleaned, lines removed, duplications flagged
 
