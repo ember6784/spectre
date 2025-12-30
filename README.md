@@ -90,7 +90,6 @@ SPECTRE includes specialized AI agents:
 | `@spectre:locator` | Find WHERE code lives |
 | `@spectre:pattern-finder` | Find reusable patterns and examples |
 | `@spectre:researcher` | Web research for best practices |
-| `@spectre:tdd-agent` | TDD methodology execution |
 | `@spectre:test-automator` | Test automation specialist |
 | `@spectre:independent-reviewer` | Plan and code review |
 
