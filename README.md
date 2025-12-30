@@ -82,31 +82,27 @@ Your todos and progress summary appear at the start of each new session.
 
 ## Installation
 
-### From Marketplace (Recommended)
+### Quick Install
 ```bash
 /plugin marketplace add Codename-Inc/spectre
-/plugin install spectre@spectre-marketplace
+/plugin install spectre@codename
 ```
 
-### Direct Install
-```bash
-/plugin install github:Codename-Inc/spectre
-```
-
-### Team Setup
-Add to `.claude/settings.json`:
+### Team Setup (Recommended)
+Add to your project's `.claude/settings.json`:
 ```json
 {
   "extraKnownMarketplaces": {
-    "spectre-marketplace": {
+    "codename": {
       "source": { "source": "github", "repo": "Codename-Inc/spectre" }
     }
   },
   "enabledPlugins": {
-    "spectre@spectre-marketplace": true
+    "spectre@codename": true
   }
 }
 ```
+This auto-installs SPECTRE for everyone on the project.
 
 ---
 
