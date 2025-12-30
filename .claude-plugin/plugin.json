@@ -1,0 +1,9 @@
+{
+  "name": "spectre",
+  "version": "1.0.0",
+  "description": "SPECTRE: Complete development workflow from Scope to Evaluate. Scope -> Plan -> Execute -> Clean -> Test -> Release -> Evaluate.",
+  "author": {
+    "name": "Joe Fernandez",
+    "email": "joe@subspace.build"
+  }
+}

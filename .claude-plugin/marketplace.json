@@ -1,0 +1,26 @@
+{
+  "name": "spectre-marketplace",
+  "version": "0.1.0",
+  "owner": {
+    "name": "Joe Fernandez",
+    "email": "joe@subspace.build"
+  },
+  "metadata": {
+    "description": "SPECTRE is an Agentic Coding Workflow - Scope, Plan, Execute, Clean, Test, Release, Evaluate - that uses simply step by step product development workflow to generate high quality results from your AI Coding Agents. SPECTRE uses meta prompting (prompts that run prompts that run subagents that run prompts) for your agents to do more autonomously for longer.",
+    "homepage": "https://github.com/Codename-Inc/spectre",
+    "pluginRoot": ".."
+  },
+  "plugins": [
+    {
+      "name": "spectre",
+      "source": "..",
+      "description": "SPECTRE is an Agentic Coding Workflow - /Scope, /Plan, /Execute, /Clean, /Test, /Release, /Evaluate - that uses a simple step by step product development workflow to generate high quality results from your AI Coding Agents. SPECTRE uses meta prompting techniques (prompts that run prompts that run subagents that run prompts) for your agents to do more autonomously for longer.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Joe Fernandez",
+        "email": "joe@subspace.build"
+      },
+      "keywords": ["workflow", "tdd", "planning", "code-review", "session-management", "memory", "handoff", "prd"]
+    }
+  ]
+}
