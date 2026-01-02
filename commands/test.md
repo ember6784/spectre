@@ -19,6 +19,8 @@ $ARGUMENTS
 ## Instructions
 
 - Primary agent plans and verifies; @test-lead subagents write test code
+- Maximize parallelism: dispatch multiple @test-lead agents simultaneously, not sequentially
+- Primary agent coordinates; subagents execute test writing in parallel batches
 - No OUT_DIR artifacts — this is a lightweight flow
 - Risk assessment is inline reasoning, not a classification phase
 - Test behaviors at boundaries, not implementation details
@@ -62,9 +64,18 @@ $ARGUMENTS
 
 ### Step (3/4) - Write Tests & Verify
 
-- **Action** — DispatchTestWriter: Spawn @test-lead subagent(s) for P0+P1+P2 files
-  - Pass: test plan, file paths, risk tier context
-  - Instruct: "Write behavioral tests, assert outcomes not calls, mutation-resistant"
+- **Action** — DispatchTestWriter: Spawn MULTIPLE @test-lead subagents IN PARALLEL
+  - **Parallelization Strategy**:
+    - Partition test plan items into independent batches (by file or logical grouping)
+    - Dispatch one @test-lead per batch — aim for 3-5 parallel agents for medium scope, up to 8 for large scope
+    - Each agent receives: its batch of test plan items, file paths, risk tier context
+    - **Critical**: Use a single message with multiple Task tool calls to launch all agents simultaneously
+  - **Batching Heuristics**:
+    - P0 files: 1 agent per file (thorough coverage requires focus)
+    - P1 files: Group 2-3 related files per agent
+    - P2 files: Group 3-5 files per agent (lighter coverage)
+  - Instruct each: "Write behavioral tests, assert outcomes not calls, mutation-resistant"
+  - Wait for all agents to complete before proceeding to lint/test verification
 
 - **Action** — RunLint: Execute linter; fix violations
   - **If** lint fails → autofix first, then manual fix
@@ -118,7 +129,9 @@ $ARGUMENTS
 - [ ] P3 files explicitly marked SKIP
 
 **Step 3 - Write Tests & Verify**:
-- [ ] @test-lead subagent dispatched (not primary agent writing tests)
+- [ ] Multiple @test-lead agents dispatched in parallel (not sequential)
+- [ ] Test plan partitioned into independent batches
+- [ ] All agents launched in single message (parallel tool calls)
 - [ ] P0 files have thorough behavioral coverage
 - [ ] P1 files have key path coverage
 - [ ] P2 files have public surface coverage

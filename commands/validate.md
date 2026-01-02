@@ -40,8 +40,8 @@ $ARGUMENTS
 
 ## Step (2/4) - Analyze Implementation & Perform Gap Analysis
 
-- **Action** — AnalyzeImplementation: Survey current implementation state.
-  - Use codebase-analyzer and codebase-locator agents to assess implementation
+- **Action** — AnalyzeImplementation: Survey current implementation state using subagents.
+  - Use @codebase-analyzer, @codebase-locator, and/or @agent-Explore subagents to assess implementation
   - Review recent commits, PRs, code changes related to task
   - Catalog implemented features, components, functionality
   - Document current system state and capabilities
