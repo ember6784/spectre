@@ -15,10 +15,66 @@ Usage: Called automatically by SessionStart hook, or manually:
 
 import json
 import os
+import select
 import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+# Timeout for reading stdin (seconds)
+STDIN_TIMEOUT = 2
+
+
+def read_stdin_with_timeout(timeout: float = STDIN_TIMEOUT) -> str | None:
+    """Read stdin with a timeout to avoid blocking indefinitely."""
+    if select.select([sys.stdin], [], [], timeout)[0]:
+        return sys.stdin.read()
+    return None
+
+
+def write_todos_to_new_session(session_id: str, todos: dict) -> bool:
+    """Write previous todos to the new session's todo file.
+
+    This populates Claude Code's TodoWrite system with the previous session's
+    non-completed todos, allowing seamless continuation.
+
+    Args:
+        session_id: The new session's ID from SessionStart hook input
+        todos: The previous session's todos dict from *_todos.json
+
+    Returns:
+        True if todos were written, False otherwise
+    """
+    if not session_id or not todos:
+        return False
+
+    todos_dir = Path.home() / ".claude" / "todos"
+    todos_dir.mkdir(parents=True, exist_ok=True)
+
+    # Convert our todos format to Claude Code's TodoWrite format
+    # TodoWrite expects: [{"content": "...", "status": "...", "activeForm": "..."}]
+    todo_items = []
+
+    for todo in todos.get("primary", []):
+        # Only carry forward non-completed todos
+        if todo.get("status") != "completed":
+            todo_items.append({
+                "content": todo.get("content", ""),
+                "status": todo.get("status", "pending"),
+                "activeForm": todo.get("activeForm", todo.get("content", ""))
+            })
+
+    if not todo_items:
+        return False
+
+    # Write to {session_id}-agent-{session_id}.json (primary agent pattern)
+    filename = f"{session_id}-agent-{session_id}.json"
+    filepath = todos_dir / filename
+
+    with open(filepath, "w") as f:
+        json.dump(todo_items, f, indent=2)
+
+    return True
 
 
 def copy_plugin_references():
@@ -381,11 +437,25 @@ def format_context(
 
     hidden_context = f"<session-context>\n{''.join(sections)}\n</session-context>"
 
+    # Check if there are non-completed todos to restore
+    restore_instruction = ""
+    if todos:
+        non_completed = [
+            t for t in todos.get("primary", [])
+            if t.get("status") != "completed"
+        ]
+        if non_completed:
+            restore_instruction = (
+                "\n\n**IMPORTANT**: Previous session had active todos. "
+                "Use TodoWrite immediately to restore them so they appear in the UI. "
+                f"There are {len(non_completed)} non-completed todos to restore."
+            )
+
     return {
         "systemMessage": visible_notice,
         "hookSpecificOutput": {
             "hookEventName": "SessionStart",
-            "additionalContext": hidden_context
+            "additionalContext": hidden_context + restore_instruction
         }
     }
 
@@ -422,6 +492,17 @@ def merge_todos_into_handoff(handoff_path: Path, todos: dict, history: dict | No
 
 def main():
     """Main entry point for SessionStart hook."""
+    # Read stdin FIRST to get new session_id (must happen before any forking)
+    stdin_data = read_stdin_with_timeout()
+
+    new_session_id = None
+    if stdin_data:
+        try:
+            hook_input = json.loads(stdin_data)
+            new_session_id = hook_input.get("session_id")
+        except json.JSONDecodeError:
+            pass
+
     # Fork to copy plugin references in background (non-blocking)
     pid = os.fork()
     if pid == 0:
@@ -459,7 +540,15 @@ def main():
     todos = find_latest_todos(session_dir)
     history = load_todos_history(session_dir)
 
-    # Format and output immediately (don't block)
+    # CRITICAL: Write previous todos to new session's todo file SYNCHRONOUSLY
+    # This must complete before output so Claude Code's TodoWrite picks them up
+    if new_session_id and todos:
+        try:
+            write_todos_to_new_session(new_session_id, todos)
+        except Exception:
+            pass  # Don't fail the hook if todo restoration fails
+
+    # Format and output context
     output = format_context(data, todos=todos, history=history)
     print(json.dumps(output))
     sys.stdout.flush()
