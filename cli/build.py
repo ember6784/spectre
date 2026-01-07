@@ -11,6 +11,155 @@ import subprocess
 import sys
 from pathlib import Path
 
+# Prompt template - identical every iteration, only file paths are substituted
+PROMPT_TEMPLATE = """\
+# SPECTRE Build Loop
+
+You are executing a multi-task build in a controlled loop. Each iteration you complete ONE parent task, then STOP.
+
+---
+
+## Files
+
+- **Tasks**: `{tasks_file_path}`
+- **Progress**: `{progress_file_path}`
+- **Additional Context**: {additional_context_paths_or_none}
+
+---
+
+## Your Instructions
+
+1. **Read the progress file** (if it exists)
+   - Check the **Codebase Patterns** section at the top for patterns discovered in prior iterations
+   - Review iteration logs to understand what was accomplished
+   - Note any recommended task updates or learnings
+   - Consider how these learnings affect remaining work
+
+2. **Read the additional context files** (if provided)
+   - These contain scope, requirements, or other guidance for this build
+   - Understand the goals and constraints before starting work
+
+3. **Read the tasks file** to see current completion state
+   - Parent tasks marked `[x]` are complete
+   - Review all incomplete parent tasks marked `[ ]`
+   - Apply any recommended updates from prior progress (reorder, modify, skip if obsolete)
+
+4. **Choose the RIGHT task to work on**
+   - Based on scope, progress, and learnings, decide which incomplete parent task makes the most sense to tackle next
+   - This is usually the next sequential task, but use your judgment:
+     - If a later task is now blocking or more urgent, do that instead
+     - If a task has become unnecessary based on learnings, mark it `[x]` with note "Skipped - {{reason}}" and choose another
+     - If dependencies have shifted, reorder accordingly
+   - Document your reasoning in your reflection
+
+5. **Work on ONE parent task only**
+   - Complete all sub-tasks under the chosen parent task
+   - Mark the parent task and its sub-tasks as `[x]` in the tasks file when done
+   - Do NOT work on multiple parent tasks — STOP after completing one
+
+6. **Verify your work**
+   - Run linting on all files you created or modified
+   - Run tests relevant to the files you touched
+   - Fix any lint errors or test failures before proceeding
+   - Do NOT skip this step — verification must pass before commit
+
+7. **Commit your changes**
+   - Stage all files changed for this task
+   - Commit with message format: `feat({{task_id}}): {{brief description}}`
+   - Example: `feat(2.1): implement Claude subprocess execution with streaming`
+
+8. **Update the progress file**
+
+   If progress file doesn't exist, create it with this structure:
+   ```markdown
+   # Build Progress: Spectre Build CLI
+
+   ## Codebase Patterns
+   <!-- Patterns discovered during build - these persist and compound across iterations -->
+
+   ---
+   ```
+
+   **First**, if you discovered any reusable patterns, add them to the **Codebase Patterns** section at the TOP.
+
+   **Then**, append your iteration log:
+   ```markdown
+   ## Iteration — {{Parent Task Title}}
+   **Status**: Complete
+   **Why This Task**: [if not sequential, explain why you chose this task]
+   **What Was Done**: [2-3 sentence summary]
+   **Files Changed**: [list of files created/modified]
+   **Key Decisions**: [bullet list or "None"]
+   **Patterns Discovered**: [added to Codebase Patterns section, or "None"]
+   **Recommended Task Updates**: [suggestions for remaining tasks, or "None"]
+   **Blockers/Risks**: [any issues encountered, or "None"]
+   ```
+
+9. **Signal completion** with the appropriate promise tag:
+   - If you completed a parent task and MORE tasks remain: output `<promise>TASK_COMPLETE</promise>`
+   - If you completed the FINAL parent task (all tasks now `[x]`): output `<promise>BUILD_COMPLETE</promise>`
+
+---
+
+## CRITICAL — Promise Integrity
+
+⚠️ **STRICT REQUIREMENTS — DO NOT VIOLATE:**
+- Only output `<promise>` tags when the statement is **GENUINELY TRUE**
+- Do NOT output false promises to escape the loop
+- Do NOT lie even if you feel stuck or have been running too long
+- The loop will continue until the promise is truthfully achieved
+
+If you cannot complete the task, document the blocker in your reflection and continue trying. The loop handles iteration — your job is honest execution.
+
+---
+
+## Begin
+
+1. Read progress file (check Codebase Patterns first)
+2. Read context files (scope, requirements)
+3. Read tasks file
+4. Choose the right task
+5. Implement it
+6. Verify (lint + tests)
+7. Commit
+8. Update progress file
+9. Output promise
+"""
+
+
+def build_prompt(tasks_file: str, context_files: list[str]) -> str:
+    """
+    Build the iteration prompt from the template.
+
+    The prompt is identical every iteration - only file paths are substituted.
+    Claude reads files directly; prompt just points to them.
+
+    Args:
+        tasks_file: Absolute path to the tasks file
+        context_files: List of absolute paths to additional context files
+
+    Returns:
+        The constructed prompt string ready to send to Claude
+    """
+    # Derive progress file path (same directory as tasks file, named build_progress.md)
+    tasks_path = Path(tasks_file)
+    progress_file = str(tasks_path.parent / "build_progress.md")
+
+    # Format additional context paths or "None"
+    if context_files:
+        additional_context = ", ".join(f"`{f}`" for f in context_files)
+    else:
+        additional_context = "None"
+
+    # Substitute variables into template
+    prompt = PROMPT_TEMPLATE.format(
+        tasks_file_path=tasks_file,
+        progress_file_path=progress_file,
+        additional_context_paths_or_none=additional_context,
+    )
+
+    return prompt
+
 
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
