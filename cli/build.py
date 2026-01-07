@@ -7,6 +7,7 @@ The CLI handles the loop; Claude handles task tracking and progress writing.
 
 import argparse
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -342,6 +343,25 @@ def run_claude_iteration(prompt: str) -> tuple[int, str, str]:
     return process.returncode, full_output, error_output
 
 
+def detect_promise(output: str) -> str | None:
+    """
+    Extract promise tag from Claude's output.
+
+    Searches for <promise>...</promise> pattern and returns the promise text
+    if found. Promise text is stripped of whitespace.
+
+    Args:
+        output: Full output from Claude subprocess
+
+    Returns:
+        Promise text ("TASK_COMPLETE" or "BUILD_COMPLETE") if found, None otherwise
+    """
+    match = re.search(r"<promise>(.*?)</promise>", output, re.DOTALL)
+    if match:
+        return match.group(1).strip()
+    return None
+
+
 def main() -> None:
     """Main entry point for Spectre Build CLI."""
     args = parse_args()
@@ -379,8 +399,53 @@ def main() -> None:
     print(f"Max iterations: {max_iterations}")
     print("-----------------------------------\n")
 
-    # TODO: Build loop implementation in Task 2.2
-    print("Build loop not yet implemented. Configuration validated successfully.")
+    # Main build loop
+    iteration = 0
+    while iteration < max_iterations:
+        iteration += 1
+
+        # Print iteration header with promise reference
+        print(f"\n{'='*60}")
+        print(f"🔄 Iteration {iteration}/{max_iterations}")
+        print(f"   Complete task: <promise>TASK_COMPLETE</promise>")
+        print(f"   All done: <promise>BUILD_COMPLETE</promise>")
+        print(f"{'='*60}\n")
+
+        # Build fresh prompt each iteration
+        prompt = build_prompt(tasks_file, context_files)
+
+        # Invoke Claude subprocess with constructed prompt
+        exit_code, output, stderr = run_claude_iteration(prompt)
+
+        # Handle non-zero exit code (error handling in Task 2.3)
+        if exit_code != 0:
+            print(f"\n❌ Claude exited with code {exit_code}", file=sys.stderr)
+            if stderr:
+                print(f"stderr: {stderr}", file=sys.stderr)
+            sys.exit(exit_code)
+
+        # Parse output for completion promises
+        promise = detect_promise(output)
+
+        if promise == "BUILD_COMPLETE":
+            print(f"\n{'='*60}")
+            print("✅ BUILD COMPLETE - All tasks finished!")
+            print(f"{'='*60}\n")
+            sys.exit(0)
+        elif promise == "TASK_COMPLETE":
+            print(f"\n✓ Task complete. Continuing to next iteration...")
+            # Loop continues to next iteration
+        else:
+            # No promise detected - Claude may need more work
+            print(f"\n⚠ No promise detected. Continuing to next iteration...")
+            # Loop continues to next iteration
+
+    # Max iterations reached
+    print(f"\n{'='*60}")
+    print(f"⚠ Max iterations ({max_iterations}) reached. Build incomplete.")
+    print("   Review build_progress.md and tasks file to assess state.")
+    print(f"{'='*60}\n")
+    sys.exit(1)
 
 
 if __name__ == "__main__":
