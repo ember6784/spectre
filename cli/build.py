@@ -7,6 +7,7 @@ The CLI handles the loop; Claude handles task tracking and progress writing.
 
 import argparse
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -137,6 +138,59 @@ def validate_inputs(
         sys.exit(1)
 
     return True
+
+
+def run_claude_iteration(prompt: str) -> tuple[int, str, str]:
+    """
+    Execute Claude with the given prompt and stream output.
+
+    Uses subprocess.Popen to invoke `claude -p`, passing the prompt via stdin.
+    Streams stdout line-by-line for real-time visibility while buffering
+    the full output for promise detection.
+
+    Args:
+        prompt: The full prompt to send to Claude
+
+    Returns:
+        Tuple of (exit_code, full_output, error_output)
+
+    Raises:
+        FileNotFoundError: If claude CLI is not installed
+    """
+    # Build command - use -p flag for print mode (non-interactive)
+    cmd = ["claude", "-p"]
+
+    # Start subprocess with pipes for all streams
+    process = subprocess.Popen(
+        cmd,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+
+    # Pass prompt via stdin and close to signal end of input
+    process.stdin.write(prompt)
+    process.stdin.close()
+
+    # Buffer for full output (needed for promise detection)
+    output_lines: list[str] = []
+
+    # Stream stdout line-by-line, printing each immediately
+    for line in process.stdout:
+        print(line, end="", flush=True)
+        output_lines.append(line)
+
+    # Wait for process to complete
+    process.wait()
+
+    # Capture stderr for error reporting
+    error_output = process.stderr.read()
+
+    # Combine buffered output
+    full_output = "".join(output_lines)
+
+    return process.returncode, full_output, error_output
 
 
 def main() -> None:
