@@ -6,17 +6,158 @@ The CLI handles the loop; Claude handles task tracking and progress writing.
 """
 
 import argparse
+import json
 import os
 import re
 import subprocess
 import sys
+import time
+from dataclasses import dataclass, field
 from pathlib import Path
+
+# Tools allowed to run without permission prompts
+# Safety relies on: (1) directory scoping (Claude can only cd to children),
+# (2) explicit tool allowlist, (3) git for rollback, (4) human oversight via streaming
+ALLOWED_TOOLS = [
+    "Bash",      # Run tests, lint, git commands
+    "Read",      # Read files
+    "Write",     # Create new files
+    "Edit",      # Modify existing files
+    "Glob",      # Find files by pattern
+    "Grep",      # Search file contents
+    "LS",        # List directories
+    "TodoRead",  # Read task list
+    "TodoWrite", # Update task list
+]
+
+# Tools explicitly denied - these would block the loop or are unsafe for automation
+DENIED_TOOLS = [
+    "AskUserQuestion",  # Would block waiting for user input
+    "WebFetch",         # Network access - could hang or be slow
+    "WebSearch",        # Network access
+    "Task",             # Spawns subagents - unpredictable timing
+    "Skill",            # Invokes skills - could have side effects
+    "EnterPlanMode",    # Changes execution mode
+    "NotebookEdit",     # Not needed for typical builds
+]
+
+
+@dataclass
+class BuildStats:
+    """Track statistics across the build."""
+    start_time: float = field(default_factory=time.time)
+    iterations_completed: int = 0
+    iterations_failed: int = 0
+    total_input_tokens: int = 0
+    total_output_tokens: int = 0
+    total_cache_read_tokens: int = 0
+    total_cache_write_tokens: int = 0
+    tool_calls: dict = field(default_factory=dict)
+
+    def add_usage(self, usage: dict) -> None:
+        """Add token usage from an assistant message."""
+        self.total_input_tokens += usage.get("input_tokens", 0)
+        self.total_output_tokens += usage.get("output_tokens", 0)
+        self.total_cache_read_tokens += usage.get("cache_read_input_tokens", 0)
+        self.total_cache_write_tokens += usage.get("cache_creation_input_tokens", 0)
+
+    def add_tool_call(self, tool_name: str) -> None:
+        """Track a tool call."""
+        self.tool_calls[tool_name] = self.tool_calls.get(tool_name, 0) + 1
+
+    def elapsed_time(self) -> str:
+        """Get formatted elapsed time."""
+        elapsed = time.time() - self.start_time
+        hours, remainder = divmod(int(elapsed), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        if hours > 0:
+            return f"{hours}h {minutes}m {seconds}s"
+        elif minutes > 0:
+            return f"{minutes}m {seconds}s"
+        else:
+            return f"{seconds}s"
+
+    def _progress_bar(self, value: float, width: int = 16) -> str:
+        """Generate a progress bar string."""
+        filled = int(value * width)
+        empty = width - filled
+        return "█" * filled + "░" * empty
+
+    def _format_tokens(self, count: int) -> str:
+        """Format token count for display (e.g., 1,337,066 or 1.3M)."""
+        if count >= 1_000_000:
+            return f"{count / 1_000_000:.1f}M"
+        elif count >= 1_000:
+            return f"{count:,}"
+        else:
+            return str(count)
+
+    def _calculate_rank(self) -> str:
+        """Calculate a rank based on build performance."""
+        total = self.iterations_completed + self.iterations_failed
+        if total == 0:
+            return "?"
+        success_rate = self.iterations_completed / total
+        if success_rate == 1.0 and self.iterations_completed >= 5:
+            return "S+"
+        elif success_rate == 1.0:
+            return "S"
+        elif success_rate >= 0.9:
+            return "A"
+        elif success_rate >= 0.7:
+            return "B"
+        elif success_rate >= 0.5:
+            return "C"
+        else:
+            return "D"
+
+    def print_summary(self, total_tasks: int | None = None) -> None:
+        """Print a summary dashboard in shareable format."""
+        # Calculate derived stats
+        total_tokens = self.total_input_tokens + self.total_output_tokens
+        total_cache = self.total_cache_read_tokens + self.total_cache_write_tokens
+        cache_rate = self.total_cache_read_tokens / total_cache if total_cache > 0 else 0
+        total_tool_calls = sum(self.tool_calls.values())
+        rank = self._calculate_rank()
+
+        # Task progress (use iterations as proxy if total_tasks not provided)
+        tasks_done = self.iterations_completed
+        tasks_total = total_tasks if total_tasks else tasks_done
+        task_pct = tasks_done / tasks_total if tasks_total > 0 else 1.0
+
+        # Format elapsed time for display (H:MM:SS format)
+        elapsed = time.time() - self.start_time
+        hours, remainder = divmod(int(elapsed), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        time_str = f"{hours}:{minutes:02d}:{seconds:02d}"
+
+        # Print the dashboard
+        tasks_str = f"{self._progress_bar(task_pct)} {tasks_done}/{tasks_total}"
+        cache_str = f"{self._progress_bar(cache_rate, 10)} {cache_rate*100:.0f}%"
+
+        print()
+        print("╭──────────────────────────────────────╮")
+        print("│  $ spectre-build                     │")
+        print("│                                      │")
+        print("│  ══ MISSION COMPLETE ══              │")
+        print("│                                      │")
+        print(f"│  TIME       {time_str:<25}│")
+        print(f"│  TASKS      {tasks_str:<25}│")
+        print(f"│  COMMITS    {self.iterations_completed:<25}│")
+        print(f"│  TOKENS     {self._format_tokens(total_tokens):<25}│")
+        print(f"│  CACHE      {cache_str:<25}│")
+        print(f"│  TOOLS      {total_tool_calls:<25}│")
+        print("│                                      │")
+        print("│  ─────────────────────────────────   │")
+        print(f"│  RANK: {rank:<5}              exit 0   │")
+        print("╰──────────────────────────────────────╯")
+        print()
 
 # Prompt template - identical every iteration, only file paths are substituted
 PROMPT_TEMPLATE = """\
 # SPECTRE Build Loop
 
-You are executing a multi-task build in a controlled loop. Each iteration you complete ONE parent task, then STOP.
+You are being invoked by an outer loop. You will complete **exactly ONE parent task**, then STOP.
 
 ---
 
@@ -28,103 +169,136 @@ You are executing a multi-task build in a controlled loop. Each iteration you co
 
 ---
 
-## Your Instructions
+## Control Flow
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  STEP 1: Context Gathering                                  │
+│  STEP 2: Task Planning (select ONE task)                    │
+│  STEP 3: Task Execution (implement selected task)           │
+│  STEP 4: Verification (lint + tests)                        │
+│  STEP 5: Progress Update (commit + write progress)          │
+│  STEP 6: STOP (output promise, end response)                │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## STEP 1: Context Gathering
+
+Read and understand the current state before doing any work.
 
 1. **Read the progress file** (if it exists)
-   - Check the **Codebase Patterns** section at the top for patterns discovered in prior iterations
+   - Check **Codebase Patterns** section for patterns from prior iterations
    - Review iteration logs to understand what was accomplished
-   - Note any recommended task updates or learnings
-   - Consider how these learnings affect remaining work
+   - Note any recommended task updates or blockers
 
 2. **Read the additional context files** (if provided)
-   - These contain scope, requirements, or other guidance for this build
-   - Understand the goals and constraints before starting work
+   - Understand scope, requirements, and constraints
 
-3. **Read the tasks file** to see current completion state
+3. **Read the tasks file**
    - Parent tasks marked `[x]` are complete
-   - Review all incomplete parent tasks marked `[ ]`
-   - Apply any recommended updates from prior progress (reorder, modify, skip if obsolete)
+   - Parent tasks marked `[ ]` are incomplete
 
-4. **Choose the RIGHT task to work on**
-   - Based on scope, progress, and learnings, decide which incomplete parent task makes the most sense to tackle next
-   - This is usually the next sequential task, but use your judgment:
-     - If a later task is now blocking or more urgent, do that instead
-     - If a task has become unnecessary based on learnings, mark it `[x]` with note "Skipped - {{reason}}" and choose another
-     - If dependencies have shifted, reorder accordingly
-   - Document your reasoning in your reflection
+---
 
-5. **Work on ONE parent task only**
-   - Complete all sub-tasks under the chosen parent task
-   - Mark the parent task and its sub-tasks as `[x]` in the tasks file when done
-   - Do NOT work on multiple parent tasks — STOP after completing one
+## STEP 2: Task Planning
 
-6. **Verify your work**
-   - Run linting on all files you created or modified
-   - Run tests relevant to the files you touched
-   - Fix any lint errors or test failures before proceeding
-   - Do NOT skip this step — verification must pass before commit
+Select **exactly ONE** incomplete parent task to work on.
 
-7. **Commit your changes**
+- Usually this is the next sequential task
+- Use judgment if dependencies have shifted or a task is blocked
+- If a task is obsolete, mark it `[x]` with "Skipped - {{reason}}" and select another
+- You will execute ONE task — the loop handles the rest
+
+**Output**: Clearly state which parent task you are working on.
+
+---
+
+## STEP 3: Task Execution
+
+Implement the selected parent task.
+
+- Complete all sub-tasks under the parent task
+- Mark sub-tasks as `[x]` in the tasks file as you complete them
+- Mark the parent task as `[x]` when all sub-tasks are done
+
+⚠️ **ONE TASK ONLY** — Do NOT start the next parent task. Stop after this one.
+
+---
+
+## STEP 4: Verification
+
+Verify your work before committing.
+
+- Run linting on files you created or modified
+- Run tests relevant to files you touched
+- Fix any failures before proceeding
+- Do NOT skip this step
+
+---
+
+## STEP 5: Progress Update
+
+Record your work, then STOP.
+
+1. **Commit your changes**
    - Stage all files changed for this task
-   - Commit with message format: `feat({{task_id}}): {{brief description}}`
-   - Example: `feat(2.1): implement Claude subprocess execution with streaming`
+   - Commit message format: `feat({{task_id}}): {{brief description}}`
 
-8. **Update the progress file**
+2. **Write to the progress file at `{progress_file_path}`**
 
-   If progress file doesn't exist, create it with this structure:
+   ⚠️ **Write to this EXACT path**: `{progress_file_path}`
+
+   If the file doesn't exist, create it with this structure:
    ```markdown
-   # Build Progress: Spectre Build CLI
+   # Build Progress
 
    ## Codebase Patterns
-   <!-- Patterns discovered during build - these persist and compound across iterations -->
+   <!-- Patterns discovered during build -->
 
    ---
    ```
 
-   **First**, if you discovered any reusable patterns, add them to the **Codebase Patterns** section at the TOP.
-
-   **Then**, append your iteration log:
+   Then append your iteration log:
    ```markdown
    ## Iteration — {{Parent Task Title}}
    **Status**: Complete
-   **Why This Task**: [if not sequential, explain why you chose this task]
    **What Was Done**: [2-3 sentence summary]
-   **Files Changed**: [list of files created/modified]
-   **Key Decisions**: [bullet list or "None"]
-   **Patterns Discovered**: [added to Codebase Patterns section, or "None"]
-   **Recommended Task Updates**: [suggestions for remaining tasks, or "None"]
-   **Blockers/Risks**: [any issues encountered, or "None"]
+   **Files Changed**: [list]
+   **Key Decisions**: [bullets or "None"]
+   **Blockers/Risks**: [bullets or "None"]
    ```
 
-9. **Signal completion** with the appropriate promise tag:
-   - If you completed a parent task and MORE tasks remain: output `<promise>TASK_COMPLETE</promise>`
-   - If you completed the FINAL parent task (all tasks now `[x]`): output `<promise>BUILD_COMPLETE</promise>`
+3. **IMMEDIATELY proceed to STEP 6** — Do NOT start another task.
 
 ---
 
-## CRITICAL — Promise Integrity
+## STEP 6: STOP
 
-⚠️ **STRICT REQUIREMENTS — DO NOT VIOLATE:**
-- Only output `<promise>` tags when the statement is **GENUINELY TRUE**
+⛔ **STOP NOW. DO NOT CONTINUE.**
+
+You have completed ONE parent task. Your iteration is DONE.
+
+Output the promise tag and **end your response immediately**:
+
+- More tasks remain → `[[PROMISE:TASK_COMPLETE]]`
+- All tasks complete → `[[PROMISE:BUILD_COMPLETE]]`
+
+**Do NOT:**
+- Start the next task
+- Plan the next task
+- Do any more work
+
+The outer loop will call you again for the next task.
+
+---
+
+## Promise Integrity
+
+- Only output promises that are **genuinely true**
 - Do NOT output false promises to escape the loop
-- Do NOT lie even if you feel stuck or have been running too long
-- The loop will continue until the promise is truthfully achieved
-
-If you cannot complete the task, document the blocker in your reflection and continue trying. The loop handles iteration — your job is honest execution.
-
----
-
-## Begin
-
-1. Read progress file (check Codebase Patterns first)
-2. Read context files (scope, requirements)
-3. Read tasks file
-4. Choose the right task
-5. Implement it
-6. Verify (lint + tests)
-7. Commit
-8. Update progress file
-9. Output promise
+- If blocked, document the blocker and continue trying
 """
 
 
@@ -203,6 +377,24 @@ Examples:
     )
 
     return parser.parse_args()
+
+
+def normalize_path(path: str) -> str:
+    """
+    Normalize a file path by stripping @ prefix if present.
+
+    The @ prefix is a common convention meaning "relative to current directory".
+    This function strips it so paths like @docs/file.md work as docs/file.md.
+
+    Args:
+        path: File path, possibly with @ prefix
+
+    Returns:
+        Path with @ prefix removed (if present)
+    """
+    if path.startswith("@"):
+        return path[1:]
+    return path
 
 
 def prompt_for_tasks_file() -> str:
@@ -290,30 +482,119 @@ def validate_inputs(
     return True
 
 
-def run_claude_iteration(prompt: str, timeout: int | None = None) -> tuple[int, str, str]:
-    """
-    Execute Claude with the given prompt and stream output.
+def format_tool_call(name: str, input_data: dict) -> str:
+    """Format a tool call for display."""
+    if name == "Read":
+        path = input_data.get("file_path", "?")
+        # Shorten path for display
+        if len(path) > 50:
+            path = "..." + path[-47:]
+        return f"📄 Read: {path}"
+    elif name == "Edit":
+        path = input_data.get("file_path", "?")
+        if len(path) > 50:
+            path = "..." + path[-47:]
+        return f"✏️  Edit: {path}"
+    elif name == "Write":
+        path = input_data.get("file_path", "?")
+        if len(path) > 50:
+            path = "..." + path[-47:]
+        return f"📝 Write: {path}"
+    elif name == "Bash":
+        cmd = input_data.get("command", "?")
+        # Truncate long commands
+        if len(cmd) > 60:
+            cmd = cmd[:57] + "..."
+        return f"💻 Bash: {cmd}"
+    elif name == "Glob":
+        pattern = input_data.get("pattern", "?")
+        return f"🔍 Glob: {pattern}"
+    elif name == "Grep":
+        pattern = input_data.get("pattern", "?")
+        return f"🔎 Grep: {pattern}"
+    elif name == "TodoWrite":
+        return "📋 TodoWrite"
+    else:
+        return f"🔧 {name}"
 
-    Uses subprocess.Popen to invoke `claude -p`, passing the prompt via stdin.
-    Streams stdout line-by-line for real-time visibility while buffering
-    the full output for promise detection.
+
+def process_stream_event(event: dict, text_buffer: list[str], stats: BuildStats | None = None) -> None:
+    """
+    Process a single stream-json event and display formatted output.
+
+    Args:
+        event: Parsed JSON event from Claude stream
+        text_buffer: List to accumulate assistant text for promise detection
+        stats: Optional BuildStats to track token usage and tool calls
+    """
+    event_type = event.get("type")
+
+    if event_type == "assistant":
+        # Assistant message - may contain text and/or tool_use
+        message = event.get("message", {})
+        content = message.get("content", [])
+
+        # Track token usage if stats provided
+        if stats and "usage" in message:
+            stats.add_usage(message["usage"])
+
+        for item in content:
+            item_type = item.get("type")
+
+            if item_type == "text":
+                text = item.get("text", "")
+                if text.strip():
+                    print(f"💬 {text}")
+                    text_buffer.append(text)
+
+            elif item_type == "tool_use":
+                tool_name = item.get("name", "?")
+                tool_input = item.get("input", {})
+                formatted = format_tool_call(tool_name, tool_input)
+                print(formatted)
+                # Track tool call
+                if stats:
+                    stats.add_tool_call(tool_name)
+
+    # Skip system events and tool_result events (too noisy)
+
+
+def run_claude_iteration(
+    prompt: str,
+    timeout: int | None = None,
+    stats: BuildStats | None = None,
+) -> tuple[int, str, str]:
+    """
+    Execute Claude with the given prompt and stream formatted output.
+
+    Uses subprocess.Popen to invoke `claude -p` with stream-json output,
+    parsing events to display formatted tool calls and assistant messages
+    while buffering text for promise detection.
 
     Args:
         prompt: The full prompt to send to Claude
         timeout: Optional timeout in seconds for the subprocess
+        stats: Optional BuildStats to track token usage and tool calls
 
     Returns:
-        Tuple of (exit_code, full_output, error_output)
+        Tuple of (exit_code, full_text_output, error_output)
 
     Raises:
         FileNotFoundError: If claude CLI is not installed
         subprocess.TimeoutExpired: If timeout is exceeded
     """
-    # Build command - use -p flag for print mode (non-interactive)
-    cmd = ["claude", "-p"]
+    # Build command for safe automated execution with structured output
+    # - allowedTools: auto-approve these without prompting
+    # - disallowedTools: block these entirely (prevents loop blocking)
+    cmd = [
+        "claude", "-p",
+        "--allowedTools", ",".join(ALLOWED_TOOLS),
+        "--disallowedTools", ",".join(DENIED_TOOLS),
+        "--output-format", "stream-json",
+        "--verbose",
+    ]
 
     # Start subprocess with pipes for all streams
-    # FileNotFoundError is raised here if claude CLI is not installed
     process = subprocess.Popen(
         cmd,
         stdin=subprocess.PIPE,
@@ -326,28 +607,36 @@ def run_claude_iteration(prompt: str, timeout: int | None = None) -> tuple[int, 
     process.stdin.write(prompt)
     process.stdin.close()
 
-    # Buffer for full output (needed for promise detection)
-    output_lines: list[str] = []
+    # Buffer for assistant text (needed for promise detection)
+    text_buffer: list[str] = []
 
-    # Stream stdout line-by-line, printing each immediately
-    # Note: Timeout cannot be applied during streaming - only on final wait
+    # Process stream-json events line by line
     for line in process.stdout:
-        print(line, end="", flush=True)
-        output_lines.append(line)
+        line = line.strip()
+        if not line:
+            continue
+
+        try:
+            event = json.loads(line)
+            process_stream_event(event, text_buffer, stats)
+        except json.JSONDecodeError:
+            # Not valid JSON, might be raw output - print it
+            print(line)
+            text_buffer.append(line)
 
     # Wait for process to complete (with optional timeout)
     try:
         process.wait(timeout=timeout)
     except subprocess.TimeoutExpired:
         process.kill()
-        process.wait()  # Clean up zombie process
+        process.wait()
         raise
 
     # Capture stderr for error reporting
     error_output = process.stderr.read()
 
-    # Combine buffered output
-    full_output = "".join(output_lines)
+    # Combine buffered text for promise detection
+    full_output = "\n".join(text_buffer)
 
     return process.returncode, full_output, error_output
 
@@ -356,7 +645,7 @@ def detect_promise(output: str) -> str | None:
     """
     Extract promise tag from Claude's output.
 
-    Searches for <promise>...</promise> pattern and returns the promise text
+    Searches for [[PROMISE:...]] pattern and returns the promise text
     if found. Promise text is stripped of whitespace.
 
     Args:
@@ -365,7 +654,7 @@ def detect_promise(output: str) -> str | None:
     Returns:
         Promise text ("TASK_COMPLETE" or "BUILD_COMPLETE") if found, None otherwise
     """
-    match = re.search(r"<promise>(.*?)</promise>", output, re.DOTALL)
+    match = re.search(r"\[\[PROMISE:(.*?)\]\]", output, re.DOTALL)
     if match:
         return match.group(1).strip()
     return None
@@ -394,6 +683,10 @@ def main() -> None:
         # Interactive mode - prompt for confirmation/override
         max_iterations = prompt_for_max_iterations()
 
+    # Normalize paths (strip @ prefix if present)
+    tasks_file = normalize_path(tasks_file)
+    context_files = [normalize_path(f) for f in context_files]
+
     # Validate all inputs before proceeding
     validate_inputs(tasks_file, context_files, max_iterations)
 
@@ -408,6 +701,9 @@ def main() -> None:
     print(f"Max iterations: {max_iterations}")
     print("-----------------------------------\n")
 
+    # Initialize stats tracking
+    stats = BuildStats()
+
     # Main build loop
     iteration = 0
     while iteration < max_iterations:
@@ -416,8 +712,8 @@ def main() -> None:
         # Print iteration header with promise reference
         print(f"\n{'='*60}")
         print(f"🔄 Iteration {iteration}/{max_iterations}")
-        print(f"   Complete task: <promise>TASK_COMPLETE</promise>")
-        print(f"   All done: <promise>BUILD_COMPLETE</promise>")
+        print(f"   Complete task: [[PROMISE:TASK_COMPLETE]]")
+        print(f"   All done: [[PROMISE:BUILD_COMPLETE]]")
         print(f"{'='*60}\n")
 
         # Build fresh prompt each iteration
@@ -425,7 +721,7 @@ def main() -> None:
 
         # Invoke Claude subprocess with constructed prompt
         try:
-            exit_code, output, stderr = run_claude_iteration(prompt)
+            exit_code, output, stderr = run_claude_iteration(prompt, stats=stats)
         except FileNotFoundError:
             print(f"\n{'='*60}", file=sys.stderr)
             print("❌ ERROR: Claude CLI not found", file=sys.stderr)
@@ -434,6 +730,7 @@ def main() -> None:
             print("The 'claude' command is not installed or not in PATH.", file=sys.stderr)
             print("Install Claude Code CLI: https://claude.ai/code", file=sys.stderr)
             print(f"{'='*60}", file=sys.stderr)
+            stats.print_summary()
             sys.exit(127)  # Standard exit code for command not found
         except subprocess.TimeoutExpired:
             print(f"\n{'='*60}", file=sys.stderr)
@@ -443,29 +740,42 @@ def main() -> None:
             print("The Claude subprocess exceeded the allowed time.", file=sys.stderr)
             print("Consider increasing timeout or breaking down tasks.", file=sys.stderr)
             print(f"{'='*60}", file=sys.stderr)
+            stats.iterations_failed += 1
+            stats.print_summary()
             sys.exit(124)  # Standard exit code for timeout
 
-        # Handle non-zero exit code from Claude
-        if exit_code != 0:
-            print(f"\n{'='*60}", file=sys.stderr)
-            print(f"❌ ERROR: Claude exited with code {exit_code}", file=sys.stderr)
-            print(f"   Iteration: {iteration}/{max_iterations}", file=sys.stderr)
-            if stderr:
-                print("", file=sys.stderr)
-                print("stderr output:", file=sys.stderr)
-                print(stderr, file=sys.stderr)
-            print(f"{'='*60}", file=sys.stderr)
-            sys.exit(exit_code)
-
-        # Parse output for completion promises
+        # Check for promise FIRST - if agent completed its task, trust that
         promise = detect_promise(output)
 
+        # Handle non-zero exit code, but only fail if there's no valid promise
+        if exit_code != 0:
+            if promise:
+                # Agent completed task despite non-zero exit - warn but continue
+                print(f"\n⚠ Claude exited with code {exit_code}, but task completed.")
+            else:
+                # No promise and non-zero exit - this is a real failure
+                print(f"\n{'='*60}", file=sys.stderr)
+                print(f"❌ ERROR: Claude exited with code {exit_code}", file=sys.stderr)
+                print(f"   Iteration: {iteration}/{max_iterations}", file=sys.stderr)
+                if stderr:
+                    print("", file=sys.stderr)
+                    print("stderr output:", file=sys.stderr)
+                    print(stderr, file=sys.stderr)
+                print(f"{'='*60}", file=sys.stderr)
+                stats.iterations_failed += 1
+                stats.print_summary()
+                sys.exit(exit_code)
+
+        # Handle promise-based flow control
         if promise == "BUILD_COMPLETE":
+            stats.iterations_completed += 1
             print(f"\n{'='*60}")
             print("✅ BUILD COMPLETE - All tasks finished!")
-            print(f"{'='*60}\n")
+            print(f"{'='*60}")
+            stats.print_summary()
             sys.exit(0)
         elif promise == "TASK_COMPLETE":
+            stats.iterations_completed += 1
             print(f"\n✓ Task complete. Continuing to next iteration...")
             # Loop continues to next iteration
         else:
@@ -477,7 +787,8 @@ def main() -> None:
     print(f"\n{'='*60}")
     print(f"⚠ Max iterations ({max_iterations}) reached. Build incomplete.")
     print("   Review build_progress.md and tasks file to assess state.")
-    print(f"{'='*60}\n")
+    print(f"{'='*60}")
+    stats.print_summary()
     sys.exit(1)
 
 
