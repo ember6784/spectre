@@ -226,6 +226,9 @@ def main() -> None:
     tasks_file = str(Path(tasks_file).resolve())
     context_files = [str(Path(f).resolve()) for f in context_files]
 
+    # Get project name for notification
+    project_name = Path.cwd().name
+
     # Track build duration
     start_time = time.time()
 
@@ -244,6 +247,7 @@ def main() -> None:
             tasks_completed=iterations_completed,
             total_time=duration_str,
             success=(exit_code == 0),
+            project=project_name,
         )
 
     sys.exit(exit_code)

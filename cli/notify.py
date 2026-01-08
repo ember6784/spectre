@@ -98,6 +98,7 @@ def notify_build_complete(
     tasks_completed: int,
     total_time: str,
     success: bool = True,
+    project: str | None = None,
 ) -> bool:
     """
     Send a build completion notification.
@@ -106,6 +107,7 @@ def notify_build_complete(
         tasks_completed: Number of tasks completed
         total_time: Human-readable duration string
         success: Whether the build succeeded
+        project: Project name/path to show in subtitle
 
     Returns:
         True if notification was sent successfully
@@ -117,7 +119,7 @@ def notify_build_complete(
         title = "👻 | SPECTRE"
         message = f"Build failed after {tasks_completed} tasks ({total_time})"
 
-    return notify(message=message, title=title)
+    return notify(message=message, title=title, subtitle=project)
 
 
 def notify_build_error(error: str) -> bool:
