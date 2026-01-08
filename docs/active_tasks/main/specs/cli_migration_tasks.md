@@ -165,23 +165,23 @@ Migrate subspace-cli into the spectre repo, rename all references from "subspace
   - [x] `spectre command --help` shows get/list/show
   - [x] `spectre setup --help` works
 
-#### [2.4] Create Shared Utilities Module
-- [ ] **2.4.1** Create cli/shared/discovery.py
-  - [ ] Agent discovery from multiple paths (project, user, plugins)
-  - [ ] Command discovery from multiple paths
-  - [ ] Plugin discovery logic
-  - [ ] Consistent with subspace-cli discovery patterns
+#### [x] [2.4] Create Shared Utilities Module
+- [x] **2.4.1** Create cli/shared/discovery.py
+  - [x] Agent discovery from multiple paths (project, user, plugins)
+  - [x] Command discovery from multiple paths
+  - [x] Plugin discovery logic
+  - [x] Consistent with subspace-cli discovery patterns
 
-- [ ] **2.4.2** Create cli/shared/output.py
-  - [ ] JSON output formatting
-  - [ ] JSONL streaming output
-  - [ ] Text/table output formatting
-  - [ ] Shared across all CLI modules
+- [x] **2.4.2** Create cli/shared/output.py
+  - [x] JSON output formatting
+  - [x] JSONL streaming output
+  - [x] Text/table output formatting
+  - [x] Shared across all CLI modules
 
-- [ ] **2.4.3** Create cli/shared/config.py
-  - [ ] Config file loading (~/.spectre/config.yaml or similar)
-  - [ ] Default paths and settings
-  - [ ] Environment variable overrides
+- [x] **2.4.3** Create cli/shared/config.py
+  - [x] Config file loading (~/.spectre/config.yaml or similar)
+  - [x] Default paths and settings
+  - [x] Environment variable overrides
 
 ---
 
