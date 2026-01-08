@@ -1,26 +1,26 @@
 {
   "name": "codename",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "owner": {
     "name": "Joe Fernandez",
     "email": "joe@bycodename.com"
   },
   "metadata": {
-    "description": "SPECTRE is an Agentic Coding Workflow - Scope, Plan, Execute, Clean, Test, Release, Evaluate - that uses simply step by step product development workflow to generate high quality results from your AI Coding Agents. SPECTRE uses meta prompting (prompts that run prompts that run subagents that run prompts) for your agents to do more autonomously for longer.",
+    "description": "Spectre CLI and plugins - agentic workflow tools for Claude Code.",
     "homepage": "https://github.com/Codename-Inc/spectre",
-    "pluginRoot": "./"
+    "pluginRoot": "./plugins"
   },
   "plugins": [
     {
       "name": "spectre",
-      "source": "./",
-      "description": "SPECTRE is an Agentic Coding Workflow - /Scope, /Plan, /Execute, /Clean, /Test, /Release, /Evaluate - that uses a simple step by step product development workflow to generate high quality results from your AI Coding Agents. SPECTRE uses meta prompting techniques (prompts that run prompts that run subagents that run prompts) for your agents to do more autonomously for longer.",
-      "version": "0.1.0",
+      "source": "./spectre",
+      "description": "SPECTRE agentic workflow - Scope, Plan, Execute, Clean, Test, Release, Evaluate. Meta-prompting system where prompts invoke subagents that execute specialized prompts.",
+      "version": "1.0.0",
       "author": {
         "name": "Joe Fernandez",
         "email": "joe@bycodename.com"
       },
-      "keywords": ["workflow", "tdd", "planning", "code-review", "session-management", "memory", "handoff", "prd"]
+      "keywords": ["workflow", "tdd", "planning", "code-review", "session-management", "handoff"]
     }
   ]
 }
