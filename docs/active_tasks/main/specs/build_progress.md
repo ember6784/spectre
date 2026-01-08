@@ -154,3 +154,15 @@
 - Package discovery includes cli*, plugins*, skills* to capture all directories
 - Package-data uses wildcard to include .md and .json across all packages
 **Blockers/Risks**: None
+
+## Iteration — [4.2] Update Installation & README
+**Status**: Complete
+**What Was Done**: Verified `pip install -e .` works correctly. Tested all CLI entry points (`spectre --help`, `spectre build --help`, `spectre subagent --help`, `spectre command --help`, `spectre setup --help`). Updated README.md with comprehensive CLI documentation including pip install instructions, build loop usage, subagent commands, slash command retrieval, and setup command examples.
+**Files Changed**:
+- README.md (updated - added Installation section with pip/source options, added full Spectre CLI section)
+- docs/active_tasks/main/specs/cli_migration_tasks.md (updated - marked 4.2 complete)
+**Key Decisions**:
+- Renamed "Command Reference" section to "Slash Command Reference" to distinguish from CLI commands
+- Added Team Setup section with settings.json example for auto-installing in projects
+- Moved Installation section to top of file (before Quick Start) for better onboarding
+**Blockers/Risks**: None
