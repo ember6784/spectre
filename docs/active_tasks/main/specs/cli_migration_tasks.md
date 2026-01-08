@@ -149,21 +149,21 @@ Migrate subspace-cli into the spectre repo, rename all references from "subspace
   - [x] Discovery imports point to cli/shared/
   - [x] All relative imports corrected
 
-#### [2.3] Create Unified CLI Entry Point
-- [ ] **2.3.1** Create cli/main.py with Click command groups
-  - [ ] Root `spectre` command group defined
-  - [ ] `build` subcommand registered
-  - [ ] `subagent` subcommand group registered
-  - [ ] `command` subcommand group registered
-  - [ ] `setup` subcommand registered
-  - [ ] `--version` flag shows version
+#### [x] [2.3] Create Unified CLI Entry Point
+- [x] **2.3.1** Create cli/main.py with Click command groups
+  - [x] Root `spectre` command group defined
+  - [x] `build` subcommand registered
+  - [x] `subagent` subcommand group registered
+  - [x] `command` subcommand group registered
+  - [x] `setup` subcommand registered
+  - [x] `--version` flag shows version
 
-- [ ] **2.3.2** Verify all subcommands accessible
-  - [ ] `spectre --help` shows all subcommands
-  - [ ] `spectre build --help` works
-  - [ ] `spectre subagent --help` shows run/list/parallel/show
-  - [ ] `spectre command --help` shows get/list/show
-  - [ ] `spectre setup --help` works
+- [x] **2.3.2** Verify all subcommands accessible
+  - [x] `spectre --help` shows all subcommands
+  - [x] `spectre build --help` works
+  - [x] `spectre subagent --help` shows run/list/parallel/show
+  - [x] `spectre command --help` shows get/list/show
+  - [x] `spectre setup --help` works
 
 #### [2.4] Create Shared Utilities Module
 - [ ] **2.4.1** Create cli/shared/discovery.py

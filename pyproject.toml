@@ -14,6 +14,7 @@ authors = [
 ]
 
 [project.scripts]
+spectre = "cli.main:main"
 spectre-build = "cli.build:main"
 
 [tool.setuptools.packages.find]
