@@ -119,3 +119,18 @@
 - Configuration supports environment variable overrides (SPECTRE_*, CLAUDE_HOME, CODEX_HOME)
 - Singleton pattern for global config access via get_config()
 **Blockers/Risks**: None
+
+## Iteration — [3.1] Implement spectre setup Command
+**Status**: Complete
+**What Was Done**: Created cli/setup.py with comprehensive setup functionality: plugin symlinking to ~/.claude/plugins/, agent symlinking to ~/.claude/agents/ with namespace prefixes (spectre:agent-name.md), and skill installation to both ~/.claude/skills/ and ~/.codex/skills/. Created skills/spectre_agent_tools/SKILL.md teaching Claude Code to recognize @agent and /command patterns and dispatch to spectre CLI. Updated cli/main.py to wire up the new setup module with --force, --skip-agents, and --skip-skill options.
+**Files Changed**:
+- cli/setup.py (new - 300+ lines of setup logic)
+- cli/main.py (updated - wired up setup module)
+- skills/spectre_agent_tools/SKILL.md (new - skill file for Claude/Codex)
+- docs/active_tasks/main/specs/cli_migration_tasks.md (updated)
+**Key Decisions**:
+- Agents are symlinked individually with namespace prefix (spectre:coder.md) to allow merging with user's existing agents
+- Skill is installed to both ~/.claude/skills/ and ~/.codex/skills/ for compatibility
+- Setup is idempotent: re-running skips already-correct symlinks, --force overwrites
+- Uses click.echo() for consistent output with rest of CLI
+**Blockers/Risks**: None
