@@ -79,3 +79,4 @@ logs/
 .env.local
 .env.*.local
 *.local.json
+.spectre/
