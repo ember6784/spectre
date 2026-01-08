@@ -188,7 +188,7 @@ def run_vanilla(
     output_format: str = "text",
     timeout: int = 600,
     enable_debug: bool = False,
-    claude_bin: str = "claude",
+    claude_bin: str = "codex",
 ) -> int:
     """Run vanilla Claude without custom agent instructions."""
     payload = build_vanilla_payload(task)
@@ -233,7 +233,7 @@ def run_agent(
     output_format: str = "text",
     timeout: int = 600,
     enable_debug: bool = False,
-    claude_bin: str = "claude",
+    claude_bin: str = "codex",
 ) -> int:
     """Run a single agent and return exit code."""
     agent_name = agent_path.stem
@@ -302,7 +302,7 @@ def _run_claude_sync(
     env["CLAUDE_HOME"] = str(claude_home)
 
     # Always use stream-json for reliable structured output
-    cmd = [claude_bin, "-p", "--output-format", "stream-json"]
+    cmd = [claude_bin, "exec", "--sandbox", "workspace-write", "--json"]
 
     debug(f"Command: {' '.join(cmd)}")
 
@@ -406,26 +406,30 @@ def _run_claude_sync(
 def parse_agent_task_pair(pair: str) -> tuple[str, str]:
     """Parse 'agent:task' or 'agent:"task with spaces"' format.
 
+    Supports namespaced agents like 'spectre:coder:"task here"'.
     Validates agent names to prevent path traversal attacks.
     Raises ValueError if format is invalid or agent name is unsafe.
     """
     agent: str | None = None
     task: str | None = None
 
-    # Handle quoted task: agent:"task here"
-    match = re.match(r'^([^:]+):"(.+)"$', pair)
+    # Handle quoted task: agent:"task here" or spectre:coder:"task here"
+    # Use greedy match (.+) to capture namespaced agents up to last :"
+    match = re.match(r'^(.+):"(.+)"$', pair)
     if match:
         agent, task = match.group(1), match.group(2)
 
     # Handle quoted task with single quotes: agent:'task here'
     if agent is None:
-        match = re.match(r"^([^:]+):'(.+)'$", pair)
+        match = re.match(r"^(.+):'(.+)'$", pair)
         if match:
             agent, task = match.group(1), match.group(2)
 
-    # Simple split on first colon
+    # Simple split on last colon for unquoted tasks (requires no colons in task)
     if agent is None and ":" in pair:
-        agent, task = pair.split(":", 1)
+        # For namespaced agents, split on last colon
+        last_colon = pair.rfind(":")
+        agent, task = pair[:last_colon], pair[last_colon + 1:]
 
     if agent is None or task is None:
         raise ValueError(f"Invalid agent:task format: {pair}")
@@ -449,7 +453,7 @@ def run_parallel(
     output_format: str = "text",
     timeout: int = 600,
     enable_debug: bool = False,
-    claude_bin: str = "claude",
+    claude_bin: str = "codex",
 ) -> int:
     """Run multiple agents in parallel."""
     from cli.shared.discovery import find_agent
@@ -616,7 +620,7 @@ async def _run_claude_async(
     env["CLAUDE_HOME"] = str(claude_home)
 
     # Always use stream-json for reliable structured output
-    cmd = [claude_bin, "-p", "--output-format", "stream-json"]
+    cmd = [claude_bin, "exec", "--sandbox", "workspace-write", "--json"]
 
     try:
         proc = await asyncio.create_subprocess_exec(
