@@ -416,8 +416,6 @@ def run_setup(force: bool = False, skip_agents: bool = False, skip_skill: bool =
     if failure_count == 0:
         click.echo(f"Setup complete! ({success_count} items installed)")
         click.echo()
-        click.echo("Claude Code can now use @agent and /command patterns.")
-        click.echo()
         click.echo("Try these commands:")
         click.echo("  spectre subagent list    # See available agents")
         click.echo("  spectre command list     # See available commands")
