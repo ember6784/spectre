@@ -1,6 +1,6 @@
 """Agent execution with sandbox isolation and JSONL streaming.
 
-This module provides functionality to run agents using the Claude CLI
+This module provides functionality to run agents using the Codex CLI
 with proper sandbox isolation and credential management.
 """
 
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from cli.shared.discovery import AgentSource
 
 # Directory for subagent credential sync (relative to workspace root)
-SUBAGENT_CLAUDE_HOME = ".spectre/claude-subagent"
+SUBAGENT_CODEX_HOME = ".spectre/codex-subagent"
 
 # Valid agent name pattern: alphanumeric, hyphen, underscore, colon (for namespaced agents)
 AGENT_NAME_PATTERN = re.compile(r"^[a-zA-Z0-9_:-]+$")
@@ -94,36 +94,36 @@ def _safe_copy_file(src: Path, dst: Path) -> bool:
         return False
 
 
-def setup_claude_home() -> Path:
-    """Sync Claude credentials to workspace for sandboxed subagent execution.
+def setup_codex_home() -> Path:
+    """Sync Codex credentials to workspace for sandboxed subagent execution.
 
-    Copies config files from ~/.claude to .spectre/claude-subagent/ so child
-    processes can authenticate while running in sandbox mode.
+    Copies config.toml and auth.json from ~/.codex to .spectre/codex-subagent/
+    so child processes can authenticate while running in sandbox mode.
 
     Security: Rejects symlinks to prevent symlink attacks.
 
-    Returns the absolute path to the workspace CLAUDE_HOME directory.
+    Returns the absolute path to the workspace CODEX_HOME directory.
     """
-    workspace_home = Path.cwd() / SUBAGENT_CLAUDE_HOME
+    workspace_home = Path.cwd() / SUBAGENT_CODEX_HOME
     workspace_home.mkdir(parents=True, exist_ok=True)
 
-    user_claude_home = Path.home() / ".claude"
+    user_codex_home = Path.home() / ".codex"
 
-    # Copy settings.json (preferences, model settings)
-    settings_src = user_claude_home / "settings.json"
-    if _safe_copy_file(settings_src, workspace_home / "settings.json"):
-        debug(f"Synced settings.json to {workspace_home}")
+    # Copy config.toml (model settings, preferences)
+    config_src = user_codex_home / "config.toml"
+    if _safe_copy_file(config_src, workspace_home / "config.toml"):
+        debug(f"Synced config.toml to {workspace_home}")
 
-    # Copy credentials.json (API credentials)
-    creds_src = user_claude_home / "credentials.json"
-    if _safe_copy_file(creds_src, workspace_home / "credentials.json"):
-        debug(f"Synced credentials.json to {workspace_home}")
+    # Copy auth.json (API credentials when logged in via `codex auth`)
+    auth_src = user_codex_home / "auth.json"
+    if _safe_copy_file(auth_src, workspace_home / "auth.json"):
+        debug(f"Synced auth.json to {workspace_home}")
 
     return workspace_home.absolute()
 
 
 def build_payload(agent_name: str, instructions: str, task: str) -> dict:
-    """Build the JSON payload for claude exec."""
+    """Build the JSON payload for codex exec."""
     guidance = SUBAGENT_GUIDANCE.format(agent_name=agent_name)
     combined_instructions = f"{guidance}\n---\n\n{instructions}"
 
@@ -140,11 +140,11 @@ def build_payload(agent_name: str, instructions: str, task: str) -> dict:
 def extract_agent_messages(jsonl_lines: list[str]) -> str:
     """Extract all agent_message text from JSONL events.
 
-    Parses Claude JSONL output and concatenates all agent_message items
+    Parses Codex JSONL output and concatenates all agent_message items
     to produce the complete response text.
 
     Args:
-        jsonl_lines: List of JSONL event strings from claude exec --json
+        jsonl_lines: List of JSONL event strings from codex exec --json
 
     Returns:
         Concatenated text from all agent_message items, joined by newlines.
@@ -173,11 +173,11 @@ def extract_agent_messages(jsonl_lines: list[str]) -> str:
 
 
 def build_vanilla_payload(task: str) -> dict:
-    """Build the JSON payload for vanilla claude exec (no custom instructions)."""
+    """Build the JSON payload for vanilla codex exec (no custom instructions)."""
     return {
         "task": task,
         "metadata": {
-            "agentName": "claude",
+            "agentName": "codex",
             "startedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         },
     }
@@ -190,19 +190,19 @@ def run_vanilla(
     enable_debug: bool = False,
     codex_bin: str = "codex",
 ) -> int:
-    """Run vanilla Claude without custom agent instructions."""
+    """Run vanilla Codex without custom agent instructions."""
     payload = build_vanilla_payload(task)
 
-    debug("Running vanilla Claude (no agent instructions)")
+    debug("Running vanilla Codex (no agent instructions)")
 
-    # Setup sandboxed CLAUDE_HOME with synced credentials
-    claude_home = setup_claude_home()
-    debug(f"CLAUDE_HOME: {claude_home}")
+    # Setup sandboxed CODEX_HOME with synced credentials
+    codex_home = setup_codex_home()
+    debug(f"CODEX_HOME: {codex_home}")
 
-    result = _run_claude_sync(
+    result = _run_codex_sync(
         payload=payload,
         codex_bin=codex_bin,
-        claude_home=claude_home,
+        codex_home=codex_home,
         timeout=timeout,
         output_format=output_format,
         enable_debug=enable_debug,
@@ -216,7 +216,7 @@ def run_vanilla(
         # Final summary event
         print(json.dumps({
             "type": "complete",
-            "agent": "claude",
+            "agent": "codex",
             "elapsed": result.elapsed,
             "returncode": result.returncode,
         }))
@@ -243,14 +243,14 @@ def run_agent(
     debug(f"Loading agent: {agent_path}")
     debug(f"Agent instructions: {len(instructions)} chars")
 
-    # Setup sandboxed CLAUDE_HOME with synced credentials
-    claude_home = setup_claude_home()
-    debug(f"CLAUDE_HOME: {claude_home}")
+    # Setup sandboxed CODEX_HOME with synced credentials
+    codex_home = setup_codex_home()
+    debug(f"CODEX_HOME: {codex_home}")
 
-    result = _run_claude_sync(
+    result = _run_codex_sync(
         payload=payload,
         codex_bin=codex_bin,
-        claude_home=claude_home,
+        codex_home=codex_home,
         timeout=timeout,
         output_format=output_format,
         enable_debug=enable_debug,
@@ -275,15 +275,15 @@ def run_agent(
     return result.returncode
 
 
-def _run_claude_sync(
+def _run_codex_sync(
     payload: dict,
     codex_bin: str,
-    claude_home: Path,
+    codex_home: Path,
     timeout: int,
     output_format: str,
     enable_debug: bool,
 ) -> AgentResult:
-    """Run claude exec synchronously in sandbox mode.
+    """Run codex exec synchronously in sandbox mode.
 
     Always runs with --output-format stream-json flag for reliable structured output.
     For text mode, parses JSONL and extracts agent messages.
@@ -295,11 +295,11 @@ def _run_claude_sync(
 
     debug(f"Running {agent_name} (sandbox: workspace-write)")
 
-    # Build environment with CLAUDE_HOME override
+    # Build environment with CODEX_HOME override
     env = os.environ.copy()
-    if "CLAUDE_HOME" in env:
-        debug(f"Overriding existing CLAUDE_HOME: {env['CLAUDE_HOME']}")
-    env["CLAUDE_HOME"] = str(claude_home)
+    if "CODEX_HOME" in env:
+        debug(f"Overriding existing CODEX_HOME: {env['CODEX_HOME']}")
+    env["CODEX_HOME"] = str(codex_home)
 
     # Always use stream-json for reliable structured output
     cmd = [codex_bin, "exec", "--sandbox", "workspace-write", "--json"]
@@ -481,8 +481,8 @@ def run_parallel(
 
     debug(f"Running {len(requests)} agents in parallel")
 
-    # Setup sandboxed CLAUDE_HOME (shared by all agents)
-    claude_home = setup_claude_home()
+    # Setup sandboxed CODEX_HOME (shared by all agents)
+    codex_home = setup_codex_home()
 
     start_time = time.time()
     all_results: list[AgentResult] = []
@@ -517,7 +517,7 @@ def run_parallel(
         _run_parallel_async(
             requests=requests,
             codex_bin=codex_bin,
-            claude_home=claude_home,
+            codex_home=codex_home,
             timeout=timeout,
             output_format=output_format,
             on_complete=on_result,
@@ -540,7 +540,7 @@ def run_parallel(
 async def _run_parallel_async(
     requests: list[tuple[str, str, Path]],
     codex_bin: str,
-    claude_home: Path,
+    codex_home: Path,
     timeout: int,
     output_format: str,
     on_complete,
@@ -555,10 +555,10 @@ async def _run_parallel_async(
         payload = build_payload(agent_name, instructions, task)
         agent_id = f"{agent_name}-{idx}"
 
-        coro = _run_claude_async(
+        coro = _run_codex_async(
             payload=payload,
             codex_bin=codex_bin,
-            claude_home=claude_home,
+            codex_home=codex_home,
             timeout=timeout,
             output_format=output_format,
             agent_id=agent_id,
@@ -595,15 +595,15 @@ async def _run_parallel_async(
     return results
 
 
-async def _run_claude_async(
+async def _run_codex_async(
     payload: dict,
     codex_bin: str,
-    claude_home: Path,
+    codex_home: Path,
     timeout: int,
     output_format: str,
     agent_id: str,
 ) -> AgentResult:
-    """Run claude exec asynchronously in sandbox mode.
+    """Run codex exec asynchronously in sandbox mode.
 
     Always runs with --output-format stream-json flag for reliable structured output.
     For text mode, parses JSONL and extracts agent messages.
@@ -613,11 +613,11 @@ async def _run_claude_async(
     agent_name = payload.get("metadata", {}).get("agentName", "subagent")
     stream_jsonl = output_format == "jsonl"
 
-    # Build environment with CLAUDE_HOME override
+    # Build environment with CODEX_HOME override
     env = os.environ.copy()
-    if "CLAUDE_HOME" in env:
-        debug(f"Overriding existing CLAUDE_HOME: {env['CLAUDE_HOME']}")
-    env["CLAUDE_HOME"] = str(claude_home)
+    if "CODEX_HOME" in env:
+        debug(f"Overriding existing CODEX_HOME: {env['CODEX_HOME']}")
+    env["CODEX_HOME"] = str(codex_home)
 
     # Always use stream-json for reliable structured output
     cmd = [codex_bin, "exec", "--sandbox", "workspace-write", "--json"]
