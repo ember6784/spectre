@@ -288,6 +288,20 @@ def get_command_sources(project_root: Path | None = None) -> list[CommandSource]
         sources.append(CommandSource("codex_user", codex_user, "user", 4))
         debug(f"Found user codex prompts: {codex_user}")
 
+    # Priority 5: Plugin commands
+    for plugin in load_installed_plugins():
+        plugin_path_str = plugin.get("path", "")
+        if not plugin_path_str:
+            continue
+        plugin_path = Path(plugin_path_str)
+        plugin_commands = plugin_path / "commands"
+        if plugin_commands.is_dir():
+            plugin_name = plugin.get("name", "unknown")
+            sources.append(
+                CommandSource(f"plugin:{plugin_name}", plugin_commands, "plugin", 5)
+            )
+            debug(f"Found plugin commands: {plugin_commands}")
+
     return sources
 
 
@@ -295,7 +309,9 @@ def find_command(name: str, sources: list[CommandSource]) -> tuple[Path, Command
     """Find command by name, respecting source priority.
 
     Supports both simple names (e.g., "deploy") and namespaced names (e.g., "spectre:sweep").
-    Namespaced commands are stored in subdirectories (e.g., commands/spectre/sweep.md).
+    Namespaced commands can be stored as:
+    - Subdirectories: commands/spectre/sweep.md (user/project commands)
+    - Flat files in plugins: plugin:spectre -> commands/sweep.md
 
     Args:
         name: Command name (with or without leading /)
@@ -318,11 +334,19 @@ def find_command(name: str, sources: list[CommandSource]) -> tuple[Path, Command
     if ":" in clean_name:
         namespace, cmd_name = clean_name.split(":", 1)
         for source in sorted(sources, key=lambda s: s.priority):
-            # Look in namespace subdirectory
+            # First, look in namespace subdirectory (e.g., commands/spectre/sweep.md)
             command_path = source.path / namespace / f"{cmd_name}.md"
             if command_path.is_file():
                 debug(f"Found command '/{clean_name}' at {command_path}")
                 return (command_path, source)
+
+            # For plugin sources, also check flat structure if namespace matches plugin name
+            # e.g., plugin:spectre source -> commands/sweep.md for /spectre:sweep
+            if source.source_type == "plugin" and source.name == f"plugin:{namespace}":
+                command_path = source.path / f"{cmd_name}.md"
+                if command_path.is_file():
+                    debug(f"Found command '/{clean_name}' at {command_path} (plugin flat)")
+                    return (command_path, source)
     else:
         # Simple command - look directly in commands directory
         for source in sorted(sources, key=lambda s: s.priority):
@@ -339,6 +363,7 @@ def list_all_commands(sources: list[CommandSource]) -> list[dict]:
     """List all commands from all sources, first-match wins for duplicates.
 
     Scans both top-level .md files and namespace subdirectories.
+    For plugin sources, top-level commands are prefixed with the plugin name.
     """
     seen: set[str] = set()
     commands: list[dict] = []
@@ -347,21 +372,36 @@ def list_all_commands(sources: list[CommandSource]) -> list[dict]:
         if not source.path.is_dir():
             continue
 
-        # Scan top-level .md files (non-namespaced commands)
+        # Determine if this is a plugin source and extract plugin name
+        plugin_namespace = None
+        if source.source_type == "plugin" and source.name.startswith("plugin:"):
+            plugin_namespace = source.name[7:]  # Strip "plugin:" prefix
+
+        # Scan top-level .md files
         for command_file in sorted(source.path.glob("*.md")):
-            name = command_file.stem
-            if name not in seen:
-                seen.add(name)
+            cmd_name = command_file.stem
+
+            # For plugins, prefix with plugin namespace (e.g., scope -> spectre:scope)
+            if plugin_namespace:
+                full_name = f"{plugin_namespace}:{cmd_name}"
+            else:
+                full_name = cmd_name
+
+            if full_name not in seen:
+                seen.add(full_name)
                 frontmatter = parse_frontmatter(command_file.read_text(encoding="utf-8"))
-                commands.append({
-                    "name": f"/{name}",
+                cmd_entry = {
+                    "name": f"/{full_name}",
                     "path": str(command_file),
                     "source": source.name,
                     "source_type": source.source_type,
                     "description": frontmatter.get("description", ""),
-                })
+                }
+                if plugin_namespace:
+                    cmd_entry["namespace"] = plugin_namespace
+                commands.append(cmd_entry)
 
-        # Scan subdirectories for namespaced commands
+        # Scan subdirectories for namespaced commands (user/project sources)
         for namespace_dir in sorted(source.path.iterdir()):
             if not namespace_dir.is_dir():
                 continue

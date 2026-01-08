@@ -26,13 +26,14 @@ if TYPE_CHECKING:
 # Directory for subagent credential sync (relative to workspace root)
 SUBAGENT_CLAUDE_HOME = ".spectre/claude-subagent"
 
-# Valid agent name pattern: alphanumeric, hyphen, underscore only
-AGENT_NAME_PATTERN = re.compile(r"^[a-zA-Z0-9_-]+$")
+# Valid agent name pattern: alphanumeric, hyphen, underscore, colon (for namespaced agents)
+AGENT_NAME_PATTERN = re.compile(r"^[a-zA-Z0-9_:-]+$")
 
 
 def validate_agent_name(name: str) -> None:
     """Validate agent name to prevent path traversal attacks.
 
+    Supports namespaced agents like 'spectre:coder'.
     Raises ValueError if name contains unsafe characters.
     """
     if not name:
@@ -40,10 +41,10 @@ def validate_agent_name(name: str) -> None:
     if not AGENT_NAME_PATTERN.match(name):
         raise ValueError(
             f"Invalid agent name '{name}': must contain only alphanumeric, "
-            "hyphen, or underscore characters"
+            "hyphen, underscore, or colon characters"
         )
-    if name.startswith("-"):
-        raise ValueError(f"Invalid agent name '{name}': cannot start with hyphen")
+    if name.startswith("-") or name.startswith(":"):
+        raise ValueError(f"Invalid agent name '{name}': cannot start with hyphen or colon")
 
 
 # Guidance prepended to prevent recursive subagent calls
