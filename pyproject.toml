@@ -5,12 +5,15 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "spectre-cli"
 version = "0.1.0"
-description = "Spectre Build CLI - Execute Claude in a loop, one task per iteration"
+description = "Spectre CLI - Unified CLI with build loop, subagent orchestration, slash commands, and plugin setup"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
     {name = "Joe Fernandez"}
+]
+dependencies = [
+    "click>=8.0"
 ]
 
 [project.scripts]
@@ -18,4 +21,7 @@ spectre = "cli.main:main"
 spectre-build = "cli.build:main"
 
 [tool.setuptools.packages.find]
-include = ["cli*"]
+include = ["cli*", "plugins*", "skills*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.md", "*.json"]

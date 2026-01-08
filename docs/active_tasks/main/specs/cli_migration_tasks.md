@@ -204,32 +204,32 @@ Migrate subspace-cli into the spectre repo, rename all references from "subspace
   - [x] Skill teaches Claude @agent and /command patterns
   - [x] Uses `spectre` command instead of `subspace`
 
-#### [3.2] Update Skill File for Spectre
-- [ ] **3.2.1** Create/update skill SKILL.md
-  - [ ] Pattern recognition for @agent-name syntax
-  - [ ] Pattern recognition for /command-name syntax
-  - [ ] Instructions reference `spectre subagent run` and `spectre command get`
-  - [ ] Examples updated with spectre commands
+#### [x] [3.2] Update Skill File for Spectre
+- [x] **3.2.1** Create/update skill SKILL.md
+  - [x] Pattern recognition for @agent-name syntax
+  - [x] Pattern recognition for /command-name syntax
+  - [x] Instructions reference `spectre subagent run` and `spectre command get`
+  - [x] Examples updated with spectre commands
 
 ---
 
 ### Phase 4: Package Configuration
 
-#### [4.1] Update pyproject.toml
-- [ ] **4.1.1** Configure package metadata
-  - [ ] Package name: `spectre-cli` or `spectre`
-  - [ ] Version set appropriately
-  - [ ] Description updated for unified CLI
-  - [ ] Dependencies include click (if not already)
+#### [x] [4.1] Update pyproject.toml
+- [x] **4.1.1** Configure package metadata
+  - [x] Package name: `spectre-cli` or `spectre`
+  - [x] Version set appropriately
+  - [x] Description updated for unified CLI
+  - [x] Dependencies include click (if not already)
 
-- [ ] **4.1.2** Configure entry points
-  - [ ] `spectre = "cli.main:main"` as primary entry
-  - [ ] `spectre-build = "cli.build:main"` as alias for compatibility
-  - [ ] Package discovery includes cli/ and plugins/
+- [x] **4.1.2** Configure entry points
+  - [x] `spectre = "cli.main:main"` as primary entry
+  - [x] `spectre-build = "cli.build:main"` as alias for compatibility
+  - [x] Package discovery includes cli/ and plugins/
 
-- [ ] **4.1.3** Configure package structure
-  - [ ] `[tool.setuptools.packages.find]` includes cli, plugins
-  - [ ] Package data includes .md files in plugins/
+- [x] **4.1.3** Configure package structure
+  - [x] `[tool.setuptools.packages.find]` includes cli, plugins
+  - [x] Package data includes .md files in plugins/
 
 #### [4.2] Update Installation & README
 - [ ] **4.2.1** Test pip install -e . works
