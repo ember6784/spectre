@@ -44,7 +44,7 @@ def get_sound_name() -> str:
 
 def notify(
     message: str,
-    title: str = "Spectre Build",
+    title: str = "👻 | SPECTRE",
     subtitle: str | None = None,
     sound: str | None = None,
 ) -> bool:
@@ -111,11 +111,11 @@ def notify_build_complete(
         True if notification was sent successfully
     """
     if success:
-        title = "Spectre Build Complete"
-        message = f"{tasks_completed} tasks completed in {total_time}"
+        title = "👻 | SPECTRE"
+        message = f"Build complete! {tasks_completed} tasks in {total_time}"
     else:
-        title = "Spectre Build Failed"
-        message = f"Build stopped after {tasks_completed} tasks ({total_time})"
+        title = "👻 | SPECTRE"
+        message = f"Build failed after {tasks_completed} tasks ({total_time})"
 
     return notify(message=message, title=title)
 
@@ -132,5 +132,5 @@ def notify_build_error(error: str) -> bool:
     """
     return notify(
         message=error[:100],  # Truncate long errors
-        title="Spectre Build Error",
+        title="👻 | SPECTRE",
     )
