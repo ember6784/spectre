@@ -230,74 +230,99 @@ def link_agents(force: bool = False) -> list[SetupResult]:
     return results
 
 
-def install_skill(force: bool = False) -> SetupResult:
-    """Install the Spectre skill to Claude/Codex skills directory.
+def install_skills(force: bool = False) -> list[SetupResult]:
+    """Install all skills from repo to Claude/Codex skills directories.
 
-    The skill teaches Claude to recognize @agent and /command patterns
-    and dispatch to the spectre CLI.
+    Skills are copied (not symlinked) to both ~/.claude/skills/ and ~/.codex/skills/.
+    Each skill directory should contain a SKILL.md file.
 
     Args:
-        force: If True, overwrite existing skill.
+        force: If True, overwrite existing skills.
 
     Returns:
-        SetupResult indicating success or failure.
+        List of SetupResult for each skill installed.
     """
-    skill_name = "spectre_agent_tools"
-
-    # Find bundled skill
+    results = []
     skills_source = get_skills_dir()
-    source_skill = skills_source / skill_name / "SKILL.md"
 
-    if not source_skill.exists():
-        return SetupResult(
+    if not skills_source.exists():
+        results.append(SetupResult(
             success=False,
-            message=f"Bundled skill not found at {source_skill}",
-            path=str(source_skill),
-        )
+            message="Skills directory not found in repo",
+            path=str(skills_source),
+        ))
+        return results
 
-    # Install to both Claude and Codex locations
-    targets = [
-        get_claude_home() / "skills" / skill_name,
-        get_codex_home() / "skills" / skill_name,
-    ]
+    # Find all skills (directories containing SKILL.md)
+    for skill_dir in skills_source.iterdir():
+        if not skill_dir.is_dir():
+            continue
 
-    installed = []
-    for target_dir in targets:
-        target_skill = target_dir / "SKILL.md"
+        source_skill = skill_dir / "SKILL.md"
+        if not source_skill.exists():
+            continue
 
-        # Check if exists
-        if target_skill.exists() and not force:
-            # Check if it's the same
+        skill_name = skill_dir.name
+
+        # Install to both Claude and Codex locations
+        targets = [
+            get_claude_home() / "skills" / skill_name,
+            get_codex_home() / "skills" / skill_name,
+        ]
+
+        installed = []
+        failed = False
+
+        for target_dir in targets:
+            target_skill = target_dir / "SKILL.md"
+
+            # Check if exists
+            if target_skill.exists() and not force:
+                try:
+                    if target_skill.read_text() == source_skill.read_text():
+                        installed.append(str(target_dir))
+                        continue
+                except OSError:
+                    pass
+
+                results.append(SetupResult(
+                    success=False,
+                    message=f"Skill '{skill_name}' already exists (use --force)",
+                    path=str(target_skill),
+                ))
+                failed = True
+                break
+
+            # Create target directory and copy entire skill directory
             try:
-                if target_skill.read_text() == source_skill.read_text():
-                    installed.append(str(target_dir))
-                    continue
-            except OSError:
-                pass
+                if target_dir.exists():
+                    shutil.rmtree(target_dir)
+                shutil.copytree(skill_dir, target_dir)
+                installed.append(str(target_dir))
+            except OSError as e:
+                results.append(SetupResult(
+                    success=False,
+                    message=f"Failed to install skill '{skill_name}': {e}",
+                    path=str(target_skill),
+                ))
+                failed = True
+                break
 
-            return SetupResult(
-                success=False,
-                message=f"Skill already exists at {target_skill} (use --force)",
-                path=str(target_skill),
-            )
+        if not failed and installed:
+            results.append(SetupResult(
+                success=True,
+                message=f"Skill '{skill_name}' installed",
+                path=installed[0],
+            ))
 
-        # Create target directory and copy skill
-        try:
-            target_dir.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source_skill, target_skill)
-            installed.append(str(target_dir))
-        except OSError as e:
-            return SetupResult(
-                success=False,
-                message=f"Failed to install skill: {e}",
-                path=str(target_skill),
-            )
+    if not results:
+        results.append(SetupResult(
+            success=False,
+            message="No skills found to install",
+            path=str(skills_source),
+        ))
 
-    return SetupResult(
-        success=True,
-        message=f"Skill installed to {', '.join(installed)}",
-        path=installed[0] if installed else None,
-    )
+    return results
 
 
 def check_claude_cli() -> bool:
@@ -361,16 +386,20 @@ def run_setup(force: bool = False, skip_agents: bool = False, skip_skill: bool =
         else:
             click.echo("  No agents to install")
 
-    # 3. Install skill (optional)
+    # 3. Install skills (optional)
     if not skip_skill:
-        click.echo("\nInstalling skill...")
-        skill_result = install_skill(force=force)
-        if skill_result.success:
-            click.echo(f"  [OK] {skill_result.message}")
-            success_count += 1
+        click.echo("\nInstalling skills...")
+        skill_results = install_skills(force=force)
+        if skill_results:
+            for result in skill_results:
+                if result.success:
+                    click.echo(f"  [OK] {result.message}")
+                    success_count += 1
+                else:
+                    click.echo(f"  [FAIL] {result.message}", err=True)
+                    failure_count += 1
         else:
-            click.echo(f"  [FAIL] {skill_result.message}", err=True)
-            failure_count += 1
+            click.echo("  No skills to install")
 
     # Summary
     click.echo()
