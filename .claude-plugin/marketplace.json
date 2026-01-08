@@ -1,6 +1,6 @@
 {
   "name": "codename",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "owner": {
     "name": "Joe Fernandez",
     "email": "joe@bycodename.com"
@@ -8,12 +8,12 @@
   "metadata": {
     "description": "Spectre CLI and plugins - agentic workflow tools for Claude Code.",
     "homepage": "https://github.com/Codename-Inc/spectre",
-    "pluginRoot": "./plugins"
+    "pluginRoot": "./"
   },
   "plugins": [
     {
       "name": "spectre",
-      "source": "./spectre",
+      "source": "./plugins/spectre",
       "description": "SPECTRE agentic workflow - Scope, Plan, Execute, Clean, Test, Release, Evaluate. Meta-prompting system where prompts invoke subagents that execute specialized prompts.",
       "version": "1.0.0",
       "author": {
@@ -24,7 +24,7 @@
     },
     {
       "name": "learn",
-      "source": "./learn",
+      "source": "./plugins/learn",
       "description": "Capture project knowledge into skills. Save patterns, decisions, gotchas, and procedures from conversations.",
       "version": "1.0.0",
       "author": {
