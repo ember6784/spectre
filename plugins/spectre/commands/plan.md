@@ -133,20 +133,7 @@ $ARGUMENTS
 
 ## Next Steps
 
-- **Action** — ReadNextStepsGuide: Read `.claude/spectre/next_steps_guide.md`
-- **Action** — RenderFooter: End with Next Steps footer
-
-**Footer format:**
-```
-╔══════════════════════════════════════════════════════════╗
-║ NEXT STEPS                                               ║
-╠══════════════════════════════════════════════════════════╣
-║ 🧭 Phase: {phase} | 🟢 {status} | 🚧 {blockers}           ║
-║ 🎯 Next — {recommended next step}                         ║
-║ ➡️ Options: {sourced from next_steps_guide.md}            ║
-║ 💬 Reply — {what to reply, if any}                        ║
-╚══════════════════════════════════════════════════════════╝
-```
+- **Action** — RenderFooter: Render Next Steps footer using `@spectre:spectre` skill (contains format template and SPECTRE command options)
 
 ## Success Criteria
 

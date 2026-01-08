@@ -92,28 +92,11 @@ $ARGUMENTS
   > **Testing Strategy**: {Simple/Medium/Complex} - {brief rationale}
   >
   > The guide is organized by user workflows with actionable checklists ready for execution.
-- **Action** — ReadNextStepsGuide: Read `.claude/spectre/next_steps_guide.md` to source relevant next step options.
-- **Action** — RenderFooter: End reply with single 60-column Next Steps footer using options from guide.
+- **Action** — RenderFooter: Render Next Steps footer using `@spectre:spectre` skill (contains format template and SPECTRE command options)
 
 ## Next Steps
 
-**Footer format:**
-```
-╔══════════════════════════════════════════════════════════╗
-║ NEXT STEPS                                               ║
-╠══════════════════════════════════════════════════════════╣
-║ 🧭 Phase: {phase} | 🟢 {status} | 🚧 {blockers}           ║
-╟──────────────────────────────────────────────────────────╢
-║ 🎯 Next — {concise recommendation; 1–2 lines max}         ║
-║                                                          ║
-║ ➡️ Options:                                              ║
-║ - Execute manual tests — {why}                           ║
-║ - /create_pr — {why}                                      ║
-║   … up to 5 total; ≤2 manual                              ║
-║                                                          ║
-║ 💬 Reply — {only if textual reply expected}               ║
-╚══════════════════════════════════════════════════════════╝
-```
+See `@spectre:spectre` skill for footer format and command options.
 
 ## Success Criteria
 

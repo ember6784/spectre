@@ -124,31 +124,11 @@ $ARGUMENTS
     - Spawn new sub-agents as needed for additional investigation
     - Continue updating document
  - **Else** → proceed to handoff
-- **Action** — ReadNextStepsGuide: Read `.claude/spectre/next_steps_guide.md` to source relevant next step options for current phase.
-- **Action** — RenderFooter: End reply with single 60-column Next Steps footer using options from guide; include up to 2 manual actions when appropriate.
+- **Action** — RenderFooter: Render Next Steps footer using `@spectre:spectre` skill (contains format template and SPECTRE command options)
 
 ## Next Steps
 
-**Footer format:**
-```
-╔══════════════════════════════════════════════════════════╗
-║ NEXT STEPS                                               ║
-╠══════════════════════════════════════════════════════════╣
-║ 🧭 Phase: {phase} | 🟢 {status} | 🚧 {blockers}           ║
-╟──────────────────────────────────────────────────────────╢
-║ 🎯 Next — {concise recommendation; 1–2 lines max}         ║
-║                                                          ║
-║ ➡️ Options:                                              ║
-║ - /new_task — {why}                                       ║
-║ - /create_plan — {why}                                    ║
-║ - /scope_riff — {why}                                     ║
-║   … up to 5 total; ≤2 manual                              ║
-║                                                          ║
-║ 💬 Reply — {only if textual reply expected}               ║
-╚══════════════════════════════════════════════════════════╝
-```
-
-Set Status to `Pending Input` when awaiting user; otherwise use `Active`, `Blocked`, `On Hold`, or `Complete`.
+See `@spectre:spectre` skill for footer format and command options.
 
 ## Success Criteria
 

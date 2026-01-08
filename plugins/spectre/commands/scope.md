@@ -430,26 +430,8 @@ ARGUMENTS -> $ARGUMENTS
   >
   > The Scope Definition is now complete with clear boundaries and minimal ambiguity, ready for the next phase.
 
-- **Action** — ReadNextStepsGuide: Read `.claude/spectre/next_steps_guide.md` to source relevant next step options for current phase.
-
-- **Action** — RenderFooter: End reply with single 60-column Next Steps footer using options from guide; include up to 2 manual actions when appropriate.
+- **Action** — RenderFooter: Render Next Steps footer using `@spectre:spectre` skill (contains format template and SPECTRE command options)
 
 ### Next Steps
 
-**Footer format:**
-```
-╔══════════════════════════════════════════════════════════╗
-║ NEXT STEPS                                               ║
-╠══════════════════════════════════════════════════════════╣
-║ 🧭 Phase: {phase} | 🟢 {status} | 🚧 {blockers}           ║
-╟──────────────────────────────────────────────────────────╢
-║ 🎯 Next — {concise recommendation; 1–2 lines max}         ║
-║                                                          ║
-║ ➡️ Options:                                              ║
-║ - /{command from next steps guide} — {why}                                       ║
-║ - /{command from next steps guide} — {why}                                     ║
-║   … up to 5 total; ≤2 manual                              ║
-║                                                          ║
-║ 💬 Reply — {only if textual reply expected}               ║
-╚══════════════════════════════════════════════════════════╝
-```
+See `@spectre:spectre` skill for footer format and command options.

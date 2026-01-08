@@ -151,23 +151,12 @@ Be conservative — NEEDS_REVIEW when uncertain.
   - Format: `type(scope): description`
   - Each commit answers: What changed and why?
 
-- **Action** — ReadNextStepsGuide: Read `.claude/spectre/next_steps_guide.md`
-- **Action** — RenderFooter: End with Next Steps footer
+- **Action** — RenderFooter: Render Next Steps footer using `@spectre:spectre` skill (contains format template and SPECTRE command options)
   - Include: files cleaned, lines removed, duplications flagged
 
 ## Next Steps
 
-**Footer format:**
-```
-╔══════════════════════════════════════════════════════════╗
-║ NEXT STEPS                                               ║
-╠══════════════════════════════════════════════════════════╣
-║ 🧭 Phase: {phase} | 🟢 {status} | 🚧 {blockers}           ║
-║ 🎯 Next — {recommended next step}                         ║
-║ ➡️ Options: {sourced from next_steps_guide.md}            ║
-║ 💬 Reply — {what to reply, if any}                        ║
-╚══════════════════════════════════════════════════════════╝
-```
+See `@spectre:spectre` skill for footer format and command options.
 
 ## Success Criteria
 

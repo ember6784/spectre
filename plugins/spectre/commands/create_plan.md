@@ -222,24 +222,13 @@ Notes: {Any additional guidance}
 
 - **Action** — ConfirmCompletion: Summarize completion.
   - Message: "🎯 Implementation Planning Complete — Ready for Next Phase. Process Completed: ✅ Codebase research consolidated; ✅ Technical clarifications addressed; ✅ Implementation plan documented and saved. Documents Updated: {PLAN_FILE}, task_context.md, task_summary.md"
-- **Action** — ReadNextStepsGuide: Read `.claude/spectre/next_steps_guide.md` to source relevant next step options.
-- **Action** — RenderFooter: End reply with single 60-column Next Steps footer using options from guide.
+- **Action** — RenderFooter: Render Next Steps footer using `@spectre:spectre` skill (contains format template and SPECTRE command options)
   - **If** awaiting user input → include "💬 Reply" line.
   - **Else** → omit "💬 Reply" line.
 
 ## Next Steps
 
-**Footer format:**
-```
-╔══════════════════════════════════════════════════════════╗
-║ NEXT STEPS                                               ║
-╠══════════════════════════════════════════════════════════╣
-║ 🧭 Phase: Technical Planning | 🟢 Complete | 🚧 None     ║
-║ 🎯 Next — {recommended next step}                         ║
-║ ➡️ Options: {sourced from next_steps_guide.md}            ║
-║ 💬 Reply — {what to reply, if any}                        ║
-╚══════════════════════════════════════════════════════════╝
-```
+See `@spectre:spectre` skill for footer format and command options.
 
 ## Success Criteria
 - [ ] Output directory determined inline (`OUT_DIR`) using branch name or user-specified path; directories created if missing
