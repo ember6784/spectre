@@ -188,7 +188,7 @@ def run_vanilla(
     output_format: str = "text",
     timeout: int = 600,
     enable_debug: bool = False,
-    claude_bin: str = "codex",
+    codex_bin: str = "codex",
 ) -> int:
     """Run vanilla Claude without custom agent instructions."""
     payload = build_vanilla_payload(task)
@@ -201,7 +201,7 @@ def run_vanilla(
 
     result = _run_claude_sync(
         payload=payload,
-        claude_bin=claude_bin,
+        codex_bin=codex_bin,
         claude_home=claude_home,
         timeout=timeout,
         output_format=output_format,
@@ -233,7 +233,7 @@ def run_agent(
     output_format: str = "text",
     timeout: int = 600,
     enable_debug: bool = False,
-    claude_bin: str = "codex",
+    codex_bin: str = "codex",
 ) -> int:
     """Run a single agent and return exit code."""
     agent_name = agent_path.stem
@@ -249,7 +249,7 @@ def run_agent(
 
     result = _run_claude_sync(
         payload=payload,
-        claude_bin=claude_bin,
+        codex_bin=codex_bin,
         claude_home=claude_home,
         timeout=timeout,
         output_format=output_format,
@@ -277,7 +277,7 @@ def run_agent(
 
 def _run_claude_sync(
     payload: dict,
-    claude_bin: str,
+    codex_bin: str,
     claude_home: Path,
     timeout: int,
     output_format: str,
@@ -302,7 +302,7 @@ def _run_claude_sync(
     env["CLAUDE_HOME"] = str(claude_home)
 
     # Always use stream-json for reliable structured output
-    cmd = [claude_bin, "exec", "--sandbox", "workspace-write", "--json"]
+    cmd = [codex_bin, "exec", "--sandbox", "workspace-write", "--json"]
 
     debug(f"Command: {' '.join(cmd)}")
 
@@ -322,7 +322,7 @@ def _run_claude_sync(
             output="",
             returncode=1,
             elapsed=0,
-            error=f"Claude CLI not found: {claude_bin}",
+            error=f"Codex CLI not found: {codex_bin}",
         )
     except OSError as e:
         return AgentResult(
@@ -453,7 +453,7 @@ def run_parallel(
     output_format: str = "text",
     timeout: int = 600,
     enable_debug: bool = False,
-    claude_bin: str = "codex",
+    codex_bin: str = "codex",
 ) -> int:
     """Run multiple agents in parallel."""
     from cli.shared.discovery import find_agent
@@ -516,7 +516,7 @@ def run_parallel(
     asyncio.run(
         _run_parallel_async(
             requests=requests,
-            claude_bin=claude_bin,
+            codex_bin=codex_bin,
             claude_home=claude_home,
             timeout=timeout,
             output_format=output_format,
@@ -539,7 +539,7 @@ def run_parallel(
 
 async def _run_parallel_async(
     requests: list[tuple[str, str, Path]],
-    claude_bin: str,
+    codex_bin: str,
     claude_home: Path,
     timeout: int,
     output_format: str,
@@ -557,7 +557,7 @@ async def _run_parallel_async(
 
         coro = _run_claude_async(
             payload=payload,
-            claude_bin=claude_bin,
+            codex_bin=codex_bin,
             claude_home=claude_home,
             timeout=timeout,
             output_format=output_format,
@@ -597,7 +597,7 @@ async def _run_parallel_async(
 
 async def _run_claude_async(
     payload: dict,
-    claude_bin: str,
+    codex_bin: str,
     claude_home: Path,
     timeout: int,
     output_format: str,
@@ -620,7 +620,7 @@ async def _run_claude_async(
     env["CLAUDE_HOME"] = str(claude_home)
 
     # Always use stream-json for reliable structured output
-    cmd = [claude_bin, "exec", "--sandbox", "workspace-write", "--json"]
+    cmd = [codex_bin, "exec", "--sandbox", "workspace-write", "--json"]
 
     try:
         proc = await asyncio.create_subprocess_exec(
@@ -636,7 +636,7 @@ async def _run_claude_async(
             output="",
             returncode=1,
             elapsed=0,
-            error=f"Claude CLI not found: {claude_bin}",
+            error=f"Codex CLI not found: {codex_bin}",
         )
     except OSError as e:
         return AgentResult(
