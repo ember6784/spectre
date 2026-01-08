@@ -35,6 +35,11 @@ def get_skills_dir() -> Path:
     return get_repo_root() / "skills"
 
 
+def get_assets_dir() -> Path:
+    """Get the assets directory in the repo."""
+    return get_repo_root() / "assets"
+
+
 def get_claude_home() -> Path:
     """Get Claude Code home directory (default: ~/.claude)."""
     claude_home = os.environ.get("CLAUDE_HOME")
@@ -335,6 +340,71 @@ def install_skills(force: bool = False) -> list[SetupResult]:
     return results
 
 
+def install_notification_sound(force: bool = False) -> SetupResult:
+    """Install the notification sound to ~/Library/Sounds/.
+
+    Only works on macOS. Copies assets/spectre.mp3 to ~/Library/Sounds/spectre.mp3.
+
+    Args:
+        force: If True, overwrite existing sound file.
+
+    Returns:
+        SetupResult indicating success or failure.
+    """
+    # Only install on macOS
+    if sys.platform != "darwin":
+        return SetupResult(
+            success=True,
+            message="Notification sound skipped (macOS only)",
+            path=None,
+        )
+
+    source = get_assets_dir() / "spectre.mp3"
+    if not source.exists():
+        return SetupResult(
+            success=False,
+            message="Notification sound not found in assets/",
+            path=str(source),
+        )
+
+    sounds_dir = Path.home() / "Library" / "Sounds"
+    sounds_dir.mkdir(parents=True, exist_ok=True)
+
+    target = sounds_dir / "spectre.mp3"
+
+    if target.exists() and not force:
+        # Check if it's the same file
+        try:
+            if target.read_bytes() == source.read_bytes():
+                return SetupResult(
+                    success=True,
+                    message="Notification sound already installed (skipped)",
+                    path=str(target),
+                )
+        except OSError:
+            pass
+
+        return SetupResult(
+            success=False,
+            message="Notification sound already exists (use --force)",
+            path=str(target),
+        )
+
+    try:
+        shutil.copy2(source, target)
+        return SetupResult(
+            success=True,
+            message="Notification sound installed",
+            path=str(target),
+        )
+    except OSError as e:
+        return SetupResult(
+            success=False,
+            message=f"Failed to install notification sound: {e}",
+            path=str(target),
+        )
+
+
 def check_claude_cli() -> bool:
     """Check if claude CLI is available."""
     return shutil.which("claude") is not None
@@ -410,6 +480,16 @@ def run_setup(force: bool = False, skip_agents: bool = False, skip_skill: bool =
                     failure_count += 1
         else:
             click.echo("  No skills to install")
+
+    # 4. Install notification sound (macOS only)
+    click.echo("\nInstalling notification sound...")
+    sound_result = install_notification_sound(force=force)
+    if sound_result.success:
+        click.echo(f"  [OK] {sound_result.message}")
+        success_count += 1
+    else:
+        click.echo(f"  [FAIL] {sound_result.message}", err=True)
+        failure_count += 1
 
     # Summary
     click.echo()
