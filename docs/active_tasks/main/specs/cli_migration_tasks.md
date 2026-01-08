@@ -77,18 +77,18 @@ Migrate subspace-cli into the spectre repo, rename all references from "subspace
   - [x] `agents/` directory at repo root created
   - [x] `templates/` directory with agent.md, command.md templates created
 
-#### [1.2] Refactor build.py into cli/build/ Module
-- [ ] **1.2.1** Split current `cli/build.py` into modular structure
-  - [ ] `cli/build/__init__.py` exposes main entry point
-  - [ ] `cli/build/loop.py` contains main build loop logic
-  - [ ] `cli/build/prompt.py` contains PROMPT_TEMPLATE and build_prompt()
-  - [ ] `cli/build/stats.py` contains BuildStats class
-  - [ ] `cli/build/stream.py` contains stream-json parsing functions
+#### [x] [1.2] Refactor build.py into cli/build/ Module
+- [x] **1.2.1** Split current `cli/build.py` into modular structure
+  - [x] `cli/build/__init__.py` exposes main entry point
+  - [x] `cli/build/loop.py` contains main build loop logic
+  - [x] `cli/build/prompt.py` contains PROMPT_TEMPLATE and build_prompt()
+  - [x] `cli/build/stats.py` contains BuildStats class
+  - [x] `cli/build/stream.py` contains stream-json parsing functions
 
-- [ ] **1.2.2** Update imports and verify build command still works
-  - [ ] All internal imports updated to new module paths
-  - [ ] `spectre build --help` displays correctly
-  - [ ] `spectre build --tasks <file>` executes successfully
+- [x] **1.2.2** Update imports and verify build command still works
+  - [x] All internal imports updated to new module paths
+  - [x] `spectre build --help` displays correctly
+  - [x] `spectre build --tasks <file>` executes successfully
 
 #### [1.3] Move Plugin Assets to plugins/spectre/
 - [ ] **1.3.1** Relocate current commands/ to plugins/spectre/commands/
