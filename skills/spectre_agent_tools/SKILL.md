@@ -28,6 +28,38 @@ description: "Use this skill when you see @name or /name patterns in user input 
 
 ---
 
+## Timeout Configuration (IMPORTANT)
+
+**Subagent commands can take significant time.** Set appropriate timeouts to avoid premature termination and retry loops.
+
+### Recommended Timeouts by Task Type
+
+| Task Type | Timeout | Examples |
+|-----------|---------|----------|
+| **Quick lookup** | 60,000ms (1 min) | `spectre subagent list`, `spectre command get` |
+| **Single agent task** | 300,000ms (5 min) | `spectre subagent run codebase-locator "find auth files"` |
+| **Complex analysis** | 600,000ms (10 min) | `spectre subagent run codebase-analyzer "trace full data flow"` |
+| **Parallel agents** | 600,000ms (10 min) | `spectre subagent parallel ...` (multiple agents) |
+
+### Why This Matters
+
+- **Default timeouts are too short** for most subagent work (often 30s default)
+- Subagents spawn Claude Code instances that need time to research, read files, and reason
+- Parallel execution multiplies wall-clock time since agents run concurrently
+- **Maximum allowed timeout is 600,000ms (10 minutes)** - this is Claude Code's hard limit
+
+### Best Practice
+
+**Always set timeout to 300,000ms minimum for any `spectre subagent run` command.** Use 600,000ms for parallel execution or complex analysis tasks.
+
+```bash
+# Example with explicit timeout (if your tool supports it)
+# For Bash tool: use timeout parameter
+# For Task tool: use timeout parameter set to 300000-600000
+```
+
+---
+
 ## Subagent Dispatch (`@agent-name`)
 
 When you see `@agent-name "task"` in user input:
