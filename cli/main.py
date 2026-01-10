@@ -75,8 +75,8 @@ def cli() -> None:
     pass
 
 
-# Build command - wrapper around argparse-based CLI
-@cli.command()
+# Build command group
+@cli.group(invoke_without_command=True)
 @click.option("--tasks", type=click.Path(exists=True), help="Path to tasks.md file")
 @click.option(
     "--context",
@@ -91,11 +91,21 @@ def cli() -> None:
     show_default=True,
     help="Maximum number of iterations",
 )
-def build(tasks: str | None, context: tuple[str, ...], max_iterations: int) -> None:
+@click.pass_context
+def build(
+    ctx: click.Context,
+    tasks: str | None,
+    context: tuple[str, ...],
+    max_iterations: int,
+) -> None:
     """Run build loop, completing one parent task per iteration.
 
     The build loop invokes Claude Code repeatedly, with each iteration
     focused on completing exactly one parent task from the tasks file.
+
+    \b
+    COMMANDS:
+      resume    - Resume the last build session
 
     \b
     EXAMPLES:
@@ -107,7 +117,24 @@ def build(tasks: str | None, context: tuple[str, ...], max_iterations: int) -> N
 
       # Multiple context files
       spectre build --tasks docs/tasks.md --context a.md --context b.md
+
+      # Resume after stopping to edit files
+      spectre build resume
     """
+    # If a subcommand was invoked, let it handle things
+    if ctx.invoked_subcommand is not None:
+        return
+
+    # Otherwise run the build directly
+    _run_build(tasks, context, max_iterations)
+
+
+def _run_build(
+    tasks: str | None,
+    context: tuple[str, ...],
+    max_iterations: int,
+) -> None:
+    """Internal function to run the build loop."""
     from cli.build.loop import run_build_loop
     from cli.build.cli import (
         prompt_for_tasks_file,
@@ -115,6 +142,7 @@ def build(tasks: str | None, context: tuple[str, ...], max_iterations: int) -> N
         prompt_for_max_iterations,
         validate_inputs,
         normalize_path,
+        save_session,
     )
 
     # Get tasks file - from args or interactive prompt
@@ -143,8 +171,76 @@ def build(tasks: str | None, context: tuple[str, ...], max_iterations: int) -> N
     tasks_file = str(Path(tasks_file).resolve())
     context_files = [str(Path(f).resolve()) for f in context_files]
 
+    # Save session for future resume
+    save_session(tasks_file, context_files, max_iterations)
+
     # Run the build loop
-    exit_code = run_build_loop(tasks_file, context_files, max_iterations)
+    exit_code, _ = run_build_loop(tasks_file, context_files, max_iterations)
+    sys.exit(exit_code)
+
+
+@build.command()
+@click.option(
+    "-y", "--yes",
+    is_flag=True,
+    help="Skip confirmation prompt",
+)
+def resume(yes: bool) -> None:
+    """Resume the last build session.
+
+    Loads the previous session configuration and restarts the build loop.
+    Use this after stopping a build (Ctrl+C) to make edits to your task,
+    plan, or scope files.
+
+    \b
+    EXAMPLES:
+      # Resume with confirmation prompt
+      spectre build resume
+
+      # Resume without confirmation
+      spectre build resume -y
+    """
+    from cli.build.loop import run_build_loop
+    from cli.build.cli import (
+        load_session,
+        save_session,
+        validate_inputs,
+        format_session_summary,
+        get_session_path,
+    )
+
+    session = load_session()
+
+    if not session:
+        click.echo("No previous session found.", err=True)
+        click.echo(f"Session file: {get_session_path()}", err=True)
+        click.echo("\nStart a new build with:", err=True)
+        click.echo("  spectre build --tasks docs/tasks.md --context docs/scope.md", err=True)
+        sys.exit(1)
+
+    # Show session details and confirm
+    click.echo("\n--- Resume Build Session ---")
+    click.echo(format_session_summary(session))
+    click.echo("----------------------------\n")
+
+    if not yes:
+        if not click.confirm("Resume this session?", default=True):
+            click.echo("Cancelled.")
+            sys.exit(0)
+
+    # Extract session values
+    tasks_file = session["tasks_file"]
+    context_files = session.get("context_files", [])
+    max_iterations = session.get("max_iterations", 10)
+
+    # Validate files still exist
+    validate_inputs(tasks_file, context_files, max_iterations)
+
+    # Update session timestamp
+    save_session(tasks_file, context_files, max_iterations)
+
+    # Run the build loop
+    exit_code, _ = run_build_loop(tasks_file, context_files, max_iterations)
     sys.exit(exit_code)
 
 

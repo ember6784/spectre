@@ -166,9 +166,14 @@ spectre build --tasks docs/tasks.md --max-iterations 10
 # With additional context files
 spectre build --tasks docs/tasks.md --context docs/scope.md --context docs/spec.md
 
-# Disable completion notification
-spectre build --tasks docs/tasks.md --no-notify
+# Resume after stopping to edit files (Ctrl+C, make changes, resume)
+spectre build resume
+
+# Resume without confirmation prompt
+spectre build resume -y
 ```
+
+Build **auto-saves your session** to `.spectre/build-session.json`. After stopping with Ctrl+C to edit your task/plan/scope files, just run `spectre build resume` to restart with the same configuration.
 
 Build sends a **macOS notification** when complete (enabled by default). To use a custom sound, drop an audio file at `~/Library/Sounds/spectre.aiff`.
 

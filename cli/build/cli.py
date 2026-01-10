@@ -6,12 +6,80 @@ the core build loop logic.
 """
 
 import argparse
+import json
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 from .loop import run_build_loop
 from ..notify import notify_build_complete, notify_build_error
+
+# Session file location
+SESSION_FILE = ".spectre/build-session.json"
+
+
+def get_session_path() -> Path:
+    """Get absolute path to session file in current working directory."""
+    return Path.cwd() / SESSION_FILE
+
+
+def save_session(tasks_file: str, context_files: list[str], max_iterations: int) -> None:
+    """
+    Save current build session to disk for later resume.
+
+    Creates .spectre directory if it doesn't exist.
+    """
+    session_path = get_session_path()
+    session_path.parent.mkdir(parents=True, exist_ok=True)
+
+    session = {
+        "tasks_file": tasks_file,
+        "context_files": context_files,
+        "max_iterations": max_iterations,
+        "started_at": datetime.now(timezone.utc).isoformat(),
+        "cwd": str(Path.cwd()),
+    }
+
+    session_path.write_text(json.dumps(session, indent=2))
+
+
+def load_session() -> dict | None:
+    """
+    Load saved session from disk.
+
+    Returns None if no session file exists or if it's invalid.
+    """
+    session_path = get_session_path()
+
+    if not session_path.exists():
+        return None
+
+    try:
+        return json.loads(session_path.read_text())
+    except (json.JSONDecodeError, OSError):
+        return None
+
+
+def format_session_summary(session: dict) -> str:
+    """Format session details for confirmation prompt."""
+    lines = [
+        f"  Tasks:      {session['tasks_file']}",
+    ]
+
+    if session.get("context_files"):
+        for i, ctx in enumerate(session["context_files"]):
+            prefix = "  Context:   " if i == 0 else "             "
+            lines.append(f"{prefix} {ctx}")
+    else:
+        lines.append("  Context:    (none)")
+
+    lines.append(f"  Max iter:   {session['max_iterations']}")
+
+    if session.get("started_at"):
+        lines.append(f"  Last run:   {session['started_at']}")
+
+    return "\n".join(lines)
 
 
 def parse_args() -> argparse.Namespace:
@@ -30,7 +98,18 @@ Examples:
 
   # With multiple context files and custom iteration limit
   spectre-build --tasks docs/tasks.md --context docs/scope.md docs/plan.md --max-iterations 15
+
+  # Resume last session (after stopping to edit files)
+  spectre-build resume
 """,
+    )
+
+    # Subcommand for resume
+    parser.add_argument(
+        "command",
+        nargs="?",
+        choices=["resume"],
+        help="Use 'resume' to restart the last build session",
     )
 
     parser.add_argument(
@@ -65,6 +144,12 @@ Examples:
         "--no-notify",
         action="store_true",
         help="Disable completion notifications",
+    )
+
+    parser.add_argument(
+        "-y", "--yes",
+        action="store_true",
+        help="Skip confirmation prompt (for resume)",
     )
 
     return parser.parse_args()
@@ -187,11 +272,79 @@ def format_duration(seconds: float) -> str:
         return f"{hours}h {mins}m"
 
 
+def run_resume(args: argparse.Namespace) -> None:
+    """Handle the 'resume' subcommand."""
+    import time
+
+    session = load_session()
+
+    if not session:
+        print("No previous session found.", file=sys.stderr)
+        print(f"Session file: {get_session_path()}", file=sys.stderr)
+        print("\nStart a new build with:", file=sys.stderr)
+        print("  spectre build --tasks docs/tasks.md --context docs/scope.md", file=sys.stderr)
+        sys.exit(1)
+
+    # Show session details and confirm
+    print("\n--- Resume Build Session ---")
+    print(format_session_summary(session))
+    print("----------------------------\n")
+
+    if not args.yes:
+        response = input("Resume this session? [Y/n] ").strip().lower()
+        if response and response not in ("y", "yes"):
+            print("Cancelled.")
+            sys.exit(0)
+
+    # Extract session values
+    tasks_file = session["tasks_file"]
+    context_files = session.get("context_files", [])
+    max_iterations = session.get("max_iterations", 10)
+
+    # Validate files still exist
+    validate_inputs(tasks_file, context_files, max_iterations)
+
+    # Determine notification setting
+    send_notification = args.notify and not args.no_notify
+    project_name = Path.cwd().name
+
+    # Update session timestamp
+    save_session(tasks_file, context_files, max_iterations)
+
+    # Track build duration
+    start_time = time.time()
+
+    # Run the build loop
+    exit_code, iterations_completed = run_build_loop(
+        tasks_file, context_files, max_iterations
+    )
+
+    # Calculate duration
+    duration = time.time() - start_time
+    duration_str = format_duration(duration)
+
+    # Send notification if enabled
+    if send_notification:
+        notify_build_complete(
+            tasks_completed=iterations_completed,
+            total_time=duration_str,
+            success=(exit_code == 0),
+            project=project_name,
+        )
+
+    sys.exit(exit_code)
+
+
 def main() -> None:
     """Main entry point for Spectre Build CLI."""
     import time
 
     args = parse_args()
+
+    # Handle resume subcommand
+    if args.command == "resume":
+        run_resume(args)
+        return  # run_resume calls sys.exit
 
     # Determine notification setting (--no-notify overrides --notify)
     send_notification = args.notify and not args.no_notify
@@ -225,6 +378,9 @@ def main() -> None:
     # Convert to absolute paths for consistency
     tasks_file = str(Path(tasks_file).resolve())
     context_files = [str(Path(f).resolve()) for f in context_files]
+
+    # Save session for future resume
+    save_session(tasks_file, context_files, max_iterations)
 
     # Get project name for notification
     project_name = Path.cwd().name
