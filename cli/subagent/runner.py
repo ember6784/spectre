@@ -688,6 +688,10 @@ async def _run_codex_async(
     # Always use stream-json for reliable structured output
     cmd = [codex_bin, "exec", "--sandbox", "workspace-write", "--json"]
 
+    # Use 1 MiB buffer to handle large JSONL lines (file contents, long responses)
+    # Default is 64 KiB which causes LimitOverrunError on large outputs
+    buffer_limit = 1024 * 1024  # 1 MiB
+
     try:
         proc = await asyncio.create_subprocess_exec(
             *cmd,
@@ -695,6 +699,7 @@ async def _run_codex_async(
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             env=env,
+            limit=buffer_limit,
         )
     except FileNotFoundError:
         return AgentResult(
