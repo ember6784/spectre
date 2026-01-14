@@ -5,17 +5,8 @@ description: 👻 | Unified planning entry point - researches, assesses complexi
 # plan: Intelligent Planning Router
 
 ## Description
-- **What** — Research codebase, assess complexity, route to appropriate planning workflow (direct tasks or plan-first)
-- **Outcome** — Detailed task breakdown ready for execution (always ends with a scoped tasks doc)
-
-## Variables
-
-### Dynamic Variables
-- `user_input`: Planning context — (via ARGUMENTS: $ARGUMENTS)
-- `target_dir`: Optional output directory override
-
-### Static Variables
-- `out_dir`: docs/active_tasks/{branch_name}
+- **What** — Research codebase, assess complexity, route to appropriate workflow (direct tasks or plan-first)
+- **Outcome** — Detailed task breakdown ready for execution
 
 ## ARGUMENTS Input
 
@@ -24,139 +15,59 @@ $ARGUMENTS
 </ARGUMENTS>
 
 ## Instructions
-
-- Research thoroughly before routing
-- Present architectural options and get user buy-in on strategy
+- Research before routing; present architectural options for user buy-in
 - Route based on hard-stops and clarity, not point-scoring
 - Never overwrite existing `tasks.md` or `plan.md` — use scoped names
 
-## Steps
+## Step 1 - Research Codebase
 
-### Step (1/4) - Research Codebase
+- **Action** — DetermineOutputDir:
+  - `OUT_DIR=docs/active_tasks/{branch_name}` (or user-specified)
+  - `mkdir -p "${OUT_DIR}"`
 
-- **Action** — ExtractScope: Get planning context from ARGUMENTS, existing docs (`task_summary.md`, `prd.md`), or conversation
-- **Action** — DetermineOutputDir: Set output location
-  - `branch_name=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)`
-  - **If** user specifies `target_dir` → `OUT_DIR={target_dir}`
-  - **Else** → `OUT_DIR=docs/active_tasks/{branch_name}`
-  - `mkdir -p "OUT_DIR"`
 - **Action** — CheckExistingResearch: Read `{OUT_DIR}/task_context.md` for "## Technical Research"
-  - **If** found with comprehensive analysis → use existing; skip research
-  - **Else** → proceed with new research
-- **Action** — AutomatedResearch: Spawn parallel research agents
-  - `codebase-locator` — find related files
-  - `codebase-analyzer` — understand patterns
-  - `codebase-pattern-finder` — find reusable components
-  - **Wait** for all agents; read identified files
-- **Action** — DocumentationReview: Review `CLAUDE.md`, `README.md` for patterns, architecture, conventions
-- **Action** — SaveResearch: Update `{OUT_DIR}/task_context.md`:
-  ```markdown
-  ## Technical Research
-  *Created by: plan.md on {timestamp}*
+  - **If** comprehensive → use existing, skip research
+  - **Else** → proceed
 
-  ### Architecture Patterns
-  - {patterns, design, organization}
+- **Action** — AutomatedResearch: Spawn parallel agents
+  - `@codebase-locator`, `@codebase-analyzer`, `@codebase-pattern-finder`
+  - **Wait** for all; read identified files
 
-  ### Technical Dependencies
-  - {dependencies, integrations, services}
+- **Action** — SaveResearch: Update `{OUT_DIR}/task_context.md` with Architecture Patterns, Dependencies, Implementation Approaches, Impact Summary
 
-  ### Implementation Approaches
-  - {similar features, reusable components}
+## Step 2 - Present Architectural Options
 
-  ### Impact Summary
-  - Files affected: {count}
-  - Packages touched: {list}
-  - Schema changes: {none|additive|destructive}
-  - API changes: {none|internal|public}
-  ```
+- **Action** — PresentOptions: 2-4 strategies (simplest to most robust)
+  - Each: core approach, trade-offs, when it makes sense
+- **Wait** — User selects strategy
+- **Action** — UpdateContext: Document selection in task_context.md
 
-### Step (2/4) - Present Architectural Options
+## Step 3 - Decide Routing
 
-- **Action** — AnalyzeStrategies: Based on research, identify 2-4 distinct approaches
-- **Action** — PresentOptions: Show strategies ranging from simplest to most robust:
-
-  For each strategy:
-  - Core approach (2-3 sentences)
-  - Key trade-offs
-  - When this makes sense
-
-  Present as options user can choose or combine.
-- **Wait** — User selects preferred strategy
-- **Action** — UpdateContext: Document selection in `{OUT_DIR}/task_context.md` under "## Selected Strategy"
-
-### Step (3/4) - Decide Routing
-
-- **Action** — EvaluateHardStops: Check these 7 criteria (any true = PLAN_FIRST)
-
-  | Criteria | Question |
-  |----------|----------|
-  | `db_schema_destructive` | Drop/rename columns or tables? |
-  | `new_service_or_component` | New microservice, worker, or major component? |
-  | `auth_or_pii_change` | Auth flow changes or new PII access? |
-  | `payment_billing_logic` | Payments, billing, or money movement? |
-  | `public_api_change` | Public/partner API contract changes? |
-  | `caching_consistency_change` | Caching, consistency, or concurrency changes? |
-  | `slo_sla_risk` | Risk of SLO/SLA violation? |
-
-- **Action** — AssessClarity: After architectural options presented, evaluate:
-  - Did user select a clear strategy?
-  - Is implementation path unambiguous?
-  - Are there open design questions?
+- **Action** — EvaluateHardStops: Any true = PLAN_FIRST
+  | db_schema_destructive | new_service_or_component | auth_or_pii_change |
+  | payment_billing_logic | public_api_change | caching_consistency | slo_sla_risk |
 
 - **Action** — MakeDecision:
-  - **If** any hard-stop true → `PLAN_FIRST`
-  - **ElseIf** architectural ambiguity or open design questions → `PLAN_FIRST`
-  - **ElseIf** user requests deeper design → `PLAN_FIRST`
+  - **If** any hard-stop OR ambiguity OR user requests → `PLAN_FIRST`
   - **Else** → `DIRECT_TASKS`
 
 - **Action** — AnnounceRoute: Tell user which path and why
-  - "Routing to direct task creation — scope is clear, no hard-stops triggered."
-  - OR "Routing to plan-first — {reason: hard-stop or ambiguity explanation}."
 
-### Step (4/4) - Route to Workflow
+## Step 4 - Route to Workflow
 
-**CRITICAL**: You MUST use the Skill tool to invoke the appropriate slash command. Do NOT just describe or suggest — actually execute it.
+**CRITICAL**: Use Skill tool to invoke slash commands. Do NOT just describe.
 
-- **If** decision is `DIRECT_TASKS`:
-  - **Action** — ExecuteSkill: Use the Skill tool to invoke `/spectre:create_tasks {OUT_DIR}/task_context.md`
-  - **Wait** — Skill completes and returns task breakdown
-  - **Action** — PresentCompletion: Show completion summary with next steps
+- **If** `DIRECT_TASKS`:
+  - **Action** — ExecuteSkill: `/spectre:create_tasks {OUT_DIR}/task_context.md`
+  - **Wait** — Returns task breakdown
 
-- **ElseIf** decision is `PLAN_FIRST`:
-  - **Action** — ExecuteSkill: Use the Skill tool to invoke `/spectre:create_plan {OUT_DIR}/task_context.md`
-  - **Wait** — Skill completes and returns technical design
-  - **Action** — PromptUser: "Review the plan and reply 'Approved' or provide feedback"
+- **ElseIf** `PLAN_FIRST`:
+  - **Action** — ExecuteSkill: `/spectre:create_plan {OUT_DIR}/task_context.md`
+  - **Wait** — Returns plan
+  - **Action** — PromptUser: "Review plan. Reply 'Approved' or provide feedback."
   - **Wait** — User approval
-  - **Action** — ExecuteSkill: Use the Skill tool to invoke `/spectre:create_tasks` (uses approved plan)
-  - **Wait** — Skill completes and returns task breakdown
-  - **Action** — PresentCompletion: Show completion summary with next steps
+  - **Action** — ExecuteSkill: `/spectre:create_tasks`
+  - **Wait** — Returns task breakdown
 
-## Next Steps
-
-- **Action** — RenderFooter: Render Next Steps footer using `@spectre:spectre` skill (contains format template and SPECTRE command options)
-
-## Success Criteria
-
-**Step 1 - Research Codebase**:
-- [ ] Scope extracted from ARGUMENTS, docs, or context
-- [ ] Output directory determined
-- [ ] Research completed or reused from existing task_context.md
-- [ ] Research saved with required sections
-
-**Step 2 - Present Architectural Options**:
-- [ ] 2-4 strategies presented with trade-offs
-- [ ] User selected preferred strategy
-- [ ] Selection documented in task_context.md
-
-**Step 3 - Decide Routing**:
-- [ ] All 7 hard-stop criteria evaluated
-- [ ] Clarity assessed (strategy clear? path unambiguous?)
-- [ ] Decision made: DIRECT_TASKS or PLAN_FIRST
-- [ ] Route announced with reasoning
-
-**Step 4 - Route to Workflow**:
-- [ ] Skill tool used to invoke slash command (not just described or suggested)
-- [ ] For DIRECT_TASKS: `/spectre:create_tasks` executed via Skill tool
-- [ ] For PLAN_FIRST: `/spectre:create_plan` executed, user approved, then `/spectre:create_tasks` executed
-- [ ] Tasks doc created without overwriting existing files
-- [ ] Next steps guide read and footer rendered
+- **Action** — RenderFooter: Use `@skill-spectre:spectre` skill for Next Steps

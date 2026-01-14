@@ -1,245 +1,199 @@
 ---
-description: 👻 | Verify scope delivery & analyze gaps - primary agent
----
+
+## description: 👻 | Verify scope delivery & analyze gaps - primary agent
 
 # validate: Scope delivery verification and gap analysis
 
 ## Description
-- Description — Review original requirements against delivered implementation to verify scope completion. Generate detailed analysis and remediation plans for gaps, ensuring complete delivery of agreed requirements. Update scope documents to reflect all delivered functionality as source of truth.
-- Desired Outcome — Comprehensive validation report with gap analysis, remediation plan (if needed), and updated scope document reflecting complete delivered solution, saved to `docs/active_tasks/{task_name}/validation/validation_report_{HHMMSS_MMDDYY}.md` and `docs/active_tasks/{task_name}/validation/gap_remediation_plan_{HHMMSS_MMDDYY}.md`.
+
+- **What** — Validate implementation against scope/tasks docs, dispatch parallel subagents per area, produce single actionable gap remediation document.
+- **Approach** — Primary agent chunks work by scope items or parent tasks, dispatches one @codebase-analyzer per area IN PARALLEL. Each subagent validates their area including E2E UX accessibility.
+- **Outcome** — Single `validation_gaps.md` with actionable tasks ready for immediate implementation.
 
 ## ARGUMENTS Input
 
-Optional user input to seed this workflow.
+**REQUIRED**: User must provide scope documents to validate against.
 
-<ARGUMENTS>
-$ARGUMENTS
-</ARGUMENTS>
+&lt;ARGUMENTS&gt; $ARGUMENTS &lt;/ARGUMENTS&gt;
 
-## Step (1/4) - Discover Scope Documents & Extract Requirements
+## Step (1/4) - Gather Validation Inputs
 
-- **Action** — DiscoverDocs: Locate and prioritize available scope documentation.
-  - Search `docs/active_tasks/{task_name}/` for scope documents in priority order:
-    1. `prd.md` (preferred - full PRD)
-    2. `scope.md` (dedicated scope)
-    3. `task_summary.md` (task summary with scope)
-    4. `plan.md` (implementation plan with requirements)
-    5. `tasks.md` or `quick_tasks.md` or anything with 'tasks' in the document name
-    6. Beads tasks with label `{branch_name}`
-    7. `ux.md` (UX spec)
-    8. `research/*.md` (research docs with requirements)
-    9. Conversation context if no documentation exists (validate against known scope)
-  - Read best available document completely
-- **Action** — ExtractRequirements: Create comprehensive requirements inventory.
-  - Extract all explicit requirements, acceptance criteria, deliverables
-  - Categorize by type: Functional, Non-functional, UI/UX, Technical, Business
-  - Identify explicit acceptance criteria and success metrics
-  - Document scope boundaries (included/excluded)
-  - Note constraints and assumptions
-- **Action** — ProcessArguments: Extract specific validation focus from ARGUMENTS (if provided).
+- **Action** — CheckArguments: Verify user provided scope documents.
 
-## Step (2/4) - Analyze Implementation & Perform Gap Analysis
+  - **If** ARGUMENTS contains file paths or "use thread context" → proceed
 
-- **Action** — AnalyzeImplementation: Survey current implementation state using subagents.
-  - Use @codebase-analyzer, @codebase-locator, and/or @agent-Explore subagents to assess implementation
-  - Review recent commits, PRs, code changes related to task
-  - Catalog implemented features, components, functionality
-  - Document current system state and capabilities
-  - Check existing tests and coverage
-  - Review quality assurance/validation artifacts
-  - Note performance/security implementations
-- **Action** — PerformGapAnalysis: Compare requirements against implementation systematically.
-  - For each documented requirement:
-    - **Status**: ✅ Fully Implemented | ⚠️ Partially Implemented | ❌ Not Implemented | 🔍 Unclear
-    - **Evidence**: Specific files, functions, components addressing requirement
-    - **Gap Details**: What's missing, incomplete, or incorrect
-    - **Impact**: High/Medium/Low impact on UX and functionality
-    - **Complexity**: Estimated effort (Simple/Moderate/Complex)
-  - Evaluate implementation quality against requirements
-  - Check edge cases, error handling, robustness
-  - Assess UX completeness
-  - Review integration points and dependencies
-- **Action** — DetectScopeCreep: Identify implemented functionality NOT covered by original scope.
-  - **Out-of-Scope Features**: Components/functions/capabilities beyond documented requirements
-  - **Undocumented Enhancements**: Quality improvements, performance optimizations, UX enhancements not specified
-  - **Additional Integrations**: External systems/APIs/services connected but not required
-  - **Extra Functionality**: Edge case handling, advanced features, "nice-to-haves" added during implementation
-  - **Scope Impact Assessment**: Beneficial, problematic, or needs documentation
+  - **Else** → Immediately reply:
 
-## Step (3/4) - Create Validation Report & Remediation Plan
+    > "What should I validate against? Please provide:
+    >
+    > - Path to scope document (e.g., `docs/active_tasks/main/scope.md`)
+    > - Path to tasks document (e.g., `docs/active_tasks/main/tasks.md`)
+    > - Or say 'use thread context' to validate against our conversation"
 
-- **Output Location** — DetermineOutputDir: Decide where to save artifacts for this workflow.
+  - **Wait** — User provides validation inputs
+
+- **Action** — ReadScopeDocs: Read provided documents completely (no limits).
+
+  - Extract all requirements, acceptance criteria, deliverables
+  - Document scope boundaries (in-scope / out-of-scope)
+  - Note constraints and success metrics
+
+- **Action** — ChunkIntoValidationAreas: Break scope into discrete validation areas.
+
+  - **From tasks.md**: Each parent task (e.g., \[1.1\], \[1.2\]) = one validation area
+  - **From scope.md**: Each "In Scope" item = one validation area
+  - **From thread context**: Each discussed feature/requirement = one validation area
+  - Aim for 3-8 validation areas (merge small items, split large ones)
+
+- **Action** — CreateValidationManifest: Document chunks before dispatch.
+
+  ```plaintext
+  Validation Areas:
+  1. {Area Name} — {What to validate}
+     - Source: {requirement text from scope doc}
+     - Expected: {what should exist}
+  2. ...
+  ```
+
+## Step (2/4) - Dispatch Parallel Validation Agents
+
+**CRITICAL**: Dispatch ALL validation agents in parallel in a SINGLE message with multiple Task tool calls. Do NOT dispatch sequentially.
+
+- **Action** — DispatchValidators: Launch one @codebase-analyzer per validation area IN PARALLEL.
+
+  **Subagent Prompt Template**:
+
+  ```plaintext
+  You are validating scope delivery for ONE specific area.
+  
+  ## Context Documents
+  - Scope: {path or "thread context"}
+  - Tasks: {path if provided}
+  - Branch: {branch_name}
+  
+  ## Your Validation Area
+  **Area**: {area_name}
+  **Source Requirement**: {exact text from scope/tasks doc}
+  **Expected Deliverables**: {what should exist}
+  
+  ## Your Task
+  1. Investigate YOUR SPECIFIC AREA only
+  2. For each requirement, determine:
+     - **Status**: ✅ Delivered | ⚠️ Partial | ❌ Missing | 🔍 Unclear
+     - **Evidence**: Specific files, functions, line numbers
+     - **Gap**: What's missing (if any)
+  
+  3. **CRITICAL - E2E UX Validation**:
+     - Is this feature accessible from the UI? (menu, button, route, etc.)
+     - Can a user actually reach this functionality?
+     - Is it hooked up end-to-end, or is the code orphaned/unreachable?
+     - Check: routes, navigation, component imports, event handlers
+  
+  4. Check for scope creep: anything beyond the requirement
+  
+  ## Output Format
+  ```
+
+  AREA: {area_name} STATUS: {overall: Delivered | Partial | Missing}
+
+  REQUIREMENTS:
+
+  - \[REQ-1\] {requirement} Status: {status} Evidence: {file:line} Gap: {what's missing} UX Accessible: {Yes/No - how user reaches it}
+
+  SCOPE CREEP: {any features beyond scope}
+
+  SUMMARY: {1-2 sentences}
+
+  ```plaintext
+  
+  ```
+
+- **Wait** — All validation agents complete
+
+## Step (3/4) - Consolidate & Create Gap Remediation Tasks
+
+- **Action** — ConsolidateFindings: Merge all subagent outputs.
+
+  - Aggregate status across all areas
+  - Compile gaps by priority (Critical/Medium/Low)
+  - Note any scope creep findings
+
+- **Action** — DetermineOutputDir:
+
   - `branch_name=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)`
-  - **If** user specifies `target_dir/path` → `OUT_DIR={that value}`
+  - **If** user specifies path → `OUT_DIR={that value}`
   - **Else** → `OUT_DIR=docs/active_tasks/{branch_name}`
-  - `mkdir -p "OUT_DIR"`
-- **Action** — GenerateValidationReport: Create comprehensive report at `{OUT_DIR}/validation/validation_report_{HHMMSS_MMDDYY}.md`.
-  - Template:
-    ```markdown
-    # Validation Report: {task_name}
-    *Generated by: validate.md on {timestamp}*
+  - `mkdir -p "${OUT_DIR}/validation"`
 
-    ## Executive Summary
-    - **Overall Status**: [Complete | Needs Attention | Significant Gaps]
-    - **Requirements Coverage**: X of Y requirements fully implemented
-    - **Critical Gaps**: [Number] high-impact items requiring attention
-    - **Estimated Remediation**: [Scope/complexity assessment]
+- **Action** — CreateValidationGapsDoc: Generate `{OUT_DIR}/validation/validation_gaps.md`.
 
-    ## Original Scope Analysis
-    ### Primary Scope Document
-    - **Source**: {document_name}
-    - **Requirements Count**: {total_requirements}
-    - **Key Deliverables**: {main_deliverables}
+  **Document Structure**:
 
-    ### Requirements Inventory
-    #### Functional Requirements (FR)
-    1. [FR-01] {requirement_description}
-       - Status: {✅|⚠️|❌|🔍}
-       - Evidence: {specific_implementation_details}
-       - Gap: {what's_missing_if_any}
-
-    [Similar structure for NFR, UI/UX, Technical, Business requirements]
-
-    ## Implementation Analysis
-    ### Current State Summary
-    {Overview of what's been implemented}
-
-    ### Key Components Delivered
-    - Component 1: {status_and_details}
-
-    ### Testing Coverage
-    - Unit Tests: {coverage_status}
-    - Integration Tests: {coverage_status}
-    - User Acceptance: {validation_status}
-
-    ## Gap Analysis Results
-    ### Critical Gaps (High Impact)
-    1. **{Gap_Title}**
-       - **Requirement**: {specific_requirement_reference}
-       - **Current State**: {what_exists_now}
-       - **Missing**: {specific_gap_description}
-       - **Impact**: {user_experience_business_impact}
-       - **Effort**: {complexity_estimate}
-
-    [Similar for Medium/Low Priority Gaps]
-
-    ## Scope Creep Analysis
-    ### Out-of-Scope Implementations Found
-    1. **{Feature_Name}**
-       - **Implementation**: {what_was_built_beyond_scope}
-       - **Evidence**: {specific_files_components_functions}
-       - **Original Scope**: {what_was_originally_documented}
-       - **Value Assessment**: {beneficial_problematic_neutral}
-       - **Recommendation**: {keep_remove_document}
-
-    ### Undocumented Enhancements
-    - **Performance Optimizations**: {list}
-    - **UX Enhancements**: {list}
-    - **Error Handling**: {additional_robustness}
-    - **Integration Improvements**: {additional_connections}
-
-    ### Scope Document Update Recommendations
-    #### Additions to Formalize (Beneficial Scope Creep)
-    - [ ] **{Feature_Name}**: Add as {FR/NFR}-XX in {scope_document}
-      - Rationale: {why_this_should_be_documented}
-      - Proposed Requirement Text: "{requirement_description}"
-
-    #### Removals to Consider (Problematic Scope Creep)
-    - [ ] **{Feature_Name}**: Consider removing or refactoring
-      - Issue: {why_this_is_problematic}
-      - Alternative: {suggested_approach}
-
-    ## Remediation Plan
-    ### Immediate Actions Required (Critical)
-    - [ ] {specific_action_item_with_details}
-
-    ### Short-term Improvements (Medium Priority)
-    - [ ] {specific_action_item_with_details}
-
-    ### Future Enhancements (Low Priority)
-    - [ ] {specific_action_item_with_details}
-
-    ## Success Criteria for Validation
-    - [ ] All critical gaps addressed
-    - [ ] User acceptance criteria met
-    - [ ] Technical requirements satisfied
-    - [ ] Quality standards achieved
-
-    ## Recommendations
-    {Strategic recommendations for addressing gaps and ensuring complete delivery}
-    ```
-- **Action** — CreateRemediationPlan: Generate detailed implementation plan if gaps found (save to `{OUT_DIR}/validation/gap_remediation_plan.md_{HHMMSS_MMDDYY}`).
-  - **Task Overview**: Clear description of remediation work needed
-  - **Gap Analysis Summary**: Priority-ordered list of items to address
-  - **Implementation Steps**: Detailed steps with code samples (2-5 actionable sub-bullets per step; include comprehensive code samples, exact file paths, function signatures, integration points)
-  - **Success Criteria**: How to verify gaps fully addressed
-  - **Testing Strategy**: Validation approach for remediated items
-- **Action** — UpdateScopeDocument: Update original scope document with all delivered functionality (MANDATORY for scope creep).
-  - **Purpose**: Scope document must serve as definitive source of truth for what was actually delivered
-  - **Process**:
-    1. Identify target document (prioritize prd.md > scope.md > task_summary.md)
-    2. Read current scope document completely
-    3. Identify appropriate section for each implemented feature
-    4. Generate proper requirement IDs following existing pattern
-    5. Insert new requirements with clear descriptions and acceptance criteria
-    6. Add implementation notes: "*(Added post-implementation - delivered {date})*"
-    7. Update summary sections or requirement counts
-    8. Maintain document integrity and formatting consistency
-  - For ALL out-of-scope implementations (beneficial or otherwise), add as formal requirements to ensure scope document accurately reflects complete delivered solution
+  ```markdown
+  # Validation Gaps: {task_name}
+  *Generated: {timestamp}*
+  
+  ## Summary
+  - **Overall Status**: {Complete | Needs Work | Significant Gaps}
+  - **Requirements**: {X of Y} delivered
+  - **Gaps Found**: {count} requiring remediation
+  - **Scope Creep**: {count} items (document or remove)
+  
+  ## Gap Remediation Tasks
+  
+  ### Phase 1: Critical Gaps
+  
+  #### [1.1] {Gap Title - e.g., "Connect auth flow to login page"}
+  **Requirement**: {original requirement text}
+  **Current State**: {what exists now}
+  **Gap**: {what's missing}
+  
+  - [ ] **1.1.1** {Specific action - e.g., "Add login route to app router"}
+    - [ ] {Acceptance criterion 1}
+    - [ ] {Acceptance criterion 2}
+  - [ ] **1.1.2** {Specific action - e.g., "Wire LoginButton onClick to auth handler"}
+    - [ ] {Acceptance criterion 1}
+    - [ ] {Acceptance criterion 2}
+  
+  #### [1.2] {Next Gap Title}
+  ...
+  
+  ### Phase 2: Medium Priority Gaps
+  ...
+  
+  ### Phase 3: Low Priority / Polish
+  ...
+  
+  ## Scope Creep Review
+  Items implemented beyond original scope:
+  - [ ] **{Feature}**: {Keep and document | Remove | Discuss}
+    - Evidence: {file:line}
+    - Recommendation: {action}
+  
+  ## Validation Coverage
+  | Area | Status | Evidence | UX Accessible |
+  |------|--------|----------|---------------|
+  | {area 1} | ✅ | {files} | Yes - {how} |
+  | {area 2} | ⚠️ | {files} | No - needs hookup |
+  | {area 3} | ❌ | — | — |
+  ```
 
 ## Step (4/4) - Present Results
 
-- **Action** — PresentResults: Present validation summary to user.
+- **Action** — PresentResults: Show validation summary.
+
   > ## Validation Complete
+    **> **Status**: {Complete | Needs Work | Significant Gaps}
   >
-  > I've analyzed the scope delivery against your original requirements:
+  > - {X of Y} requirements delivered
+  > - {N} gaps requiring remediation
+  > - {N} scope creep items to review
+    **> **Gap Remediation Doc**: `{OUT_DIR}/validation/validation_gaps.md`
   >
-  > **Validation Results:**
-  > - Requirements Coverage: {X of Y} fully implemented
-  > - Critical Gaps: {number} items requiring attention
-  > - Out-of-Scope Features: {number} implementations found beyond original scope
-  > - Status: {Complete | Needs Attention | Significant Gaps}
-  >
-  > **Documents Created:**
-  > - ✅ Validation Report: `validation_report.md`
-  > - {✅|❌} Gap Remediation Plan: `gap_remediation_plan.md` (if needed)
-  > - {✅|❌} Updated Scope Document: `{scope_document}` (if beneficial scope creep found)
-  >
-  > **Scope Document Updates:**
-  > - {number} beneficial features formalized as requirements
-  > - {number} problematic implementations flagged for review
-  >
-  > {Brief summary of key findings and recommended actions}
-- **Action** — RenderFooter: Render Next Steps footer using `@spectre:spectre` skill (contains format template and SPECTRE command options)
+  > {1-2 sentence summary of key findings}
+
+- **Action** — RenderFooter: Render Next Steps footer using `@skill-spectre:spectre` skill
 
 ## Next Steps
 
-See `@spectre:spectre` skill for footer format and command options.
-
-## Success Criteria
-
-- [ ] Output directory determined inline (`OUT_DIR`) using branch name or user-specified path
-- [ ] Best available scope document discovered and analyzed (priority: prd > scope > task_summary > plan > ux > research)
-- [ ] All requirements extracted and categorized systematically (Functional, Non-functional, UI/UX, Technical, Business)
-- [ ] Scope boundaries and constraints documented
-- [ ] ARGUMENTS processed for specific validation focus (if provided)
-- [ ] Current implementation thoroughly assessed using codebase agents
-- [ ] Recent commits, PRs, and code changes reviewed
-- [ ] Implemented features and components cataloged
-- [ ] Testing state and coverage assessed
-- [ ] Gap analysis performed requirement-by-requirement with evidence
-- [ ] Every requirement analyzed with Status/Evidence/Gap/Impact/Complexity
-- [ ] Implementation quality assessed (edge cases, error handling, robustness, UX completeness)
-- [ ] Scope creep detection completed with out-of-scope implementations cataloged
-- [ ] Value assessment performed for all undocumented features (beneficial/problematic/neutral)
-- [ ] Comprehensive validation report created at `{OUT_DIR}/validate/validation_report.md`
-- [ ] Executive summary includes overall status and remediation estimate
-- [ ] Requirements inventory documented with status for each requirement
-- [ ] Gap analysis results organized by priority (Critical/Medium/Low)
-- [ ] Scope creep analysis includes update recommendations
-- [ ] Original scope document updated with new requirements for ALL delivered functionality
-- [ ] Remediation plan created if gaps found (detailed steps with code samples)
- 
-- [ ] Validation summary presented to user
-- [ ] Next steps guide read and relevant options sourced for footer
-- [ ] Scope document now serves as accurate source of truth for delivered solution
+See `/skill-spectre:spectre` skill for footer format and command options. 

@@ -4,13 +4,9 @@ description: 👻 | Transform requirements into executable tasks - primary agent
 
 # create_tasks: Unified Task Breakdown
 
-## Description
-- Transform requirements into detailed, actionable task lists with dependency analysis and execution options.
-- Adapts to available context: uses existing research when sufficient, conducts research when needed.
-- Outputs both sequential and parallel execution strategies.
-- Scales naturally: generates as many phases and tasks as the scope requires.
+Transform requirements into detailed, actionable task lists with dependency analysis and execution options. Adapts to context: uses existing research when sufficient, conducts research when needed. Outputs sequential and parallel execution strategies. Scales naturally to scope size.
 
-## ARGUMENTS Input
+## ARGUMENTS
 
 <ARGUMENTS>
 $ARGUMENTS
@@ -18,340 +14,105 @@ $ARGUMENTS
 
 ---
 
-## Step 1 - Establish Context
+## Step 1: Establish Context
 
 ### 1a. Determine Output Location
-- `branch_name=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)`
-- **If** user specifies path → `TASK_DIR={that value}`
-- **Else** → `TASK_DIR=docs/active_tasks/{branch_name}`
-- Ensure dirs exist: `mkdir -p "${TASK_DIR}/specs" "${TASK_DIR}/research" "${TASK_DIR}/clarifications"`
+- `TASK_DIR = user_specified || docs/active_tasks/{branch_name}`
+- `mkdir -p "${TASK_DIR}/specs" "${TASK_DIR}/research" "${TASK_DIR}/clarifications"`
 
-### 1b. Scan Available Artifacts
-Inventory what exists in `TASK_DIR/`:
-- [ ] `task_summary.md` — scope/objectives
-- [ ] `prd.md` — detailed requirements
-- [ ] `ux.md` — user experience specs
-- [ ] `plan.md` — technical approach
-- [ ] `task_context.md` — technical research
-- [ ] `research/*.md` — analysis docs
-
-Also note: thread context, user-provided docs, ARGUMENTS content.
+### 1b. Scan Artifacts
+Inventory `TASK_DIR/`: task_summary.md, prd.md, ux.md, plan.md, task_context.md, research/*.md + thread context, ARGUMENTS.
 
 ### 1c. Assess Complexity
-**Simple task** (research likely unnecessary):
-- Single file/component change
-- Clear pattern already exists in codebase
-- Scope explicitly stated, no ambiguity
-
-**Complex task** (research likely needed):
-- Multi-component or cross-cutting
-- New patterns or integrations
-- Unclear technical approach
+**Simple** (no research): Single file, clear pattern, explicit scope | **Complex** (research needed): Multi-component, new patterns, unclear approach
 
 ---
 
-## Step 2 - Research Decision
+## Step 2: Research Decision
 
-### 2a. Do We NEED Research?
-Based on complexity assessment from 1c:
-- **If** simple task with clear scope → `NEED_RESEARCH=false`
-- **If** complex task or unclear approach → `NEED_RESEARCH=true`
+### 2a. Need Research?
+- **If** simple with clear scope → `NEED_RESEARCH=false`
+- **If** complex or unclear → `NEED_RESEARCH=true`
 
-### 2b. Do We HAVE Research? (if NEED_RESEARCH=true)
-Assess existing artifacts with judgment:
-
-| Artifact | Check For |
-|----------|-----------|
-| `task_context.md` | "## Technical Research" section with relevant analysis |
-| `research/*.md` | Docs covering codebase patterns, integration points |
-| `plan.md` | Technical approach, file locations, architecture decisions |
-
-**Judgment call**: Do existing artifacts sufficiently cover:
-- Codebase patterns relevant to this scope?
-- Integration points and dependencies?
-- Technical approach and target files?
-
+### 2b. Have Research? (if needed)
+Check artifacts for: codebase patterns, integration points, technical approach, target files.
 - **If** sufficient coverage → `HAVE_RESEARCH=true`
-- **If** gaps exist → `HAVE_RESEARCH=false` (note specific gaps)
+- **If** gaps exist → `HAVE_RESEARCH=false` (note gaps)
 
 ### 2c. Action
-- **If** `NEED_RESEARCH=false` → proceed to Step 3
-- **If** `NEED_RESEARCH=true` AND `HAVE_RESEARCH=true` → read existing, proceed to Step 3
-- **If** `NEED_RESEARCH=true` AND `HAVE_RESEARCH=false` → conduct research (Step 2d)
+- `NEED=false` → proceed to Step 3
+- `NEED=true` AND `HAVE=true` → read existing, proceed to Step 3
+- `NEED=true` AND `HAVE=false` → conduct research (2d)
 
 ### 2d. Conduct Research (conditional)
-- Spawn parallel agents: @codebase-locator, @codebase-analyzer, @codebase-pattern-finder
-- Review: `CLAUDE.md`, `README.md`, architecture docs
-- Identify: patterns, integration points, technical constraints
-- Save to `${TASK_DIR}/task_context.md` under "## Technical Research"
+Spawn parallel: @codebase-locator, @codebase-analyzer, @codebase-pattern-finder
+Review: CLAUDE.md, README.md, architecture docs
+Save to `${TASK_DIR}/task_context.md` under "## Technical Research"
 
 ---
 
-## Step 3 - Extract Requirements
+## Step 3: Extract Requirements
 
-### 3a. Gather From All Sources
-Read completely (no limits):
-- Planning docs: `task_summary.md`, `prd.md`, `plan.md`, `ux.md`
-- Thread context: discussed requirements, user goals
-- ARGUMENTS: any provided scope
+### 3a. Gather & Synthesize
+Read all sources (task_summary, prd, plan, ux, thread, ARGUMENTS). Extract: what to build, users, success criteria, out of scope, constraints. Number: REQ-001, REQ-002. Categorize: Core, UX, Technical.
 
-### 3b. Synthesize Requirements
-- Extract: what must be built, who uses it, success criteria
-- Extract: out of scope, constraints, boundaries
-- Number each: REQ-001, REQ-002, etc.
-- Categorize: Core functionality, UX, Technical constraints
-
-### 3c. Requirements Boundary Check
-- [ ] Clear on what IS explicitly requested?
-- [ ] Clear on what is NOT mentioned (exclude)?
-- [ ] **Scope Litmus Test**: Would user recognize this as exactly what they asked?
-
-**STRICT COMPLIANCE**: Tasks deliver ONLY what's explicitly stated. No performance optimizations, extra features, future-proofing, or "best practices" unless requested.
+### 3b. Boundary Check
+**Scope Litmus Test**: Would user recognize this as exactly what they asked?
+**STRICT**: Deliver ONLY what's explicitly stated. No optimizations, extra features, future-proofing unless requested.
 
 ---
 
-## Step 4 - Generate Tasks
+## Step 4: Generate Tasks
 
 ### 4a. Synthesize Architecture Context
-- **Action** — SynthesizeArchitectureContext: Based on research findings, document where this work fits and how we'll approach it.
-  - **Where This Fits**: Which system/component this extends, how it connects to existing architecture (with file references)
-  - **Technical Approach**: Key pattern we're following, why this approach vs alternatives, what existing code we're leveraging
-  - **Key Decisions**: Important technical decisions made and their rationale
-  - This section helps the user understand how the work integrates with the product before diving into tasks
+- **Action** — SynthesizeArchitectureContext: Document where work fits, technical approach, key decisions (with file references).
 
-### Task Hierarchy (4 Levels)
-- **📦 Phase**: Organizational header (no checkbox) — groups related parent tasks
-- **📋 Parent Task**: Cohesive deliverable (small-medium scope) — one component/file
-- **✓ Sub-task**: Atomic work (single focused change) — single action, 2-3 acceptance criteria
-- **✓ Acceptance Criteria**: Verifiable outcomes (not implementation steps)
+### Task Hierarchy
+📦 **Phase** (organizational) → 📋 **Parent** (small-medium deliverable) → ✓ **Sub-task** (atomic, 2-3 criteria) → ✓ **Criteria** (verifiable outcomes)
 
-**Numbering**: Phase 1 → Parent 1.1, 1.2 → Sub-tasks 1.1.1, 1.1.2 → Criteria ✓
+**Numbering**: Phase 1 → 1.1, 1.2 → 1.1.1, 1.1.2 → ✓
 
 ### 4b. Create Parent Tasks
-- **Action** — CreateParentTasks: Draft as many phases as needed to logically organize work, each with as many parent tasks (📋) as required to cover complete scope.
-  - Each parent task = single cohesive deliverable (small-medium scope)
-  - Cover ALL extracted requirements with no gaps
-  - Group related work into phases for clarity
-  - Align with technical approach (from research or existing docs)
+- **Action** — CreateParentTasks: Draft phases and parents (📋) covering complete scope. Each parent = cohesive deliverable.
 
 ### 4c. Break Down Sub-tasks
-- **Action** — BreakdownSubTasks: For each parent, generate as many detailed sub-tasks as needed to complete the parent.
-  - **Sub-task structure**:
-    - Start with action verb (Create, Implement, Add, Update, Configure, Enable)
-    - Use technical language freely (components, endpoints, middleware, hooks, schemas)
-    - Specify technical patterns and architecture decisions
-    - Name specific files, components, or modules when helpful
-    - Describe technical behavior and integration points
-    - Be specific enough for junior dev to know where to start
-    - Completable as a single focused change
+- **Action** — BreakdownSubTasks: For each parent, generate sub-tasks.
+  - Format: Action verb + technical specifics + file names. Single focused change.
+  - **Include**: Technical terms, patterns, integration points, file names, constraints
+  - **Avoid**: Code snippets, function signatures, line-by-line steps
+  - Criteria: 2-3 verifiable outcomes per sub-task. Split if 5+ criteria.
 
-  - **What to INCLUDE in sub-tasks:**
-    - ✅ Technical terms (JWT, REST, WebSocket, React hooks, SQL queries)
-    - ✅ Architecture patterns (middleware, pub/sub, observer, factory)
-    - ✅ Integration points (which components connect, API contracts)
-    - ✅ File/component names (UserProfileComponent, authMiddleware.ts)
-    - ✅ Technical constraints (max file size, timeout duration, data format)
-
-  - **What to AVOID in sub-tasks:**
-    - ❌ Code snippets or pseudo-code
-    - ❌ Exact function signatures or variable names
-    - ❌ Line-by-line implementation steps
-    - ❌ Specific library API calls (unless architecturally significant)
-
-  - **Acceptance criteria**:
-    - Describe technical behaviors and observable outcomes
-    - Include integration expectations and error handling
-    - 2-3 verifiable outcomes per sub-task
-    - Be specific about technical requirements
-
-  - **Decomposition**: Split if 5+ criteria or multiple concerns
-
-### 4d. Validate Task Structure
-- **Action** — VerifyCoverage: Cross-reference tasks against extracted requirements.
-  - Map each requirement from Step 3 to at least one task
-  - Flag any uncovered requirements → add missing tasks
-  - Flag any tasks without requirement justification → remove or justify
-
-- **Action** — ValidateTasks: Validate complete task structure.
-  - **Coverage Validation**:
-    - [ ] All extracted requirements from Step 3 addressed by tasks?
-    - [ ] No gaps in requirement coverage?
-  - **Exclusion Validation**:
-    - [ ] Adding anything beyond explicit requests?
-    - [ ] Avoiding "nice-to-have" additions not requested?
-  - **Structure Validation**:
-    - [ ] Parent tasks are small-medium scope, sub-tasks are atomic?
-    - [ ] Each sub-task has 2-3 acceptance criteria?
-    - [ ] Acceptance criteria verifiable (not implementation steps)?
+### 4d. Validate
+- **Action** — VerifyCoverage: Map requirements to tasks. Flag gaps → add. Flag unjustified → remove.
+- **Action** — ValidateTasks: Coverage, Exclusion (nothing beyond requests), Structure (hierarchy, atomic, verifiable)
 
 ---
 
-## Step 5 - Dependency Analysis & Execution Strategies
+## Step 5: Dependency Analysis & Execution
 
 ### 5a. Map Dependencies
-- Review parent tasks (📋 level) for dependencies
-- Identify which parent tasks can be completed in parallel vs sequential
-- Dependency rules:
-  - Parent tasks requiring output from other parents must be sequenced
-  - Tasks modifying same files need sequencing or coordination
-  - Testing tasks run after implementation tasks
-  - Setup/configuration tasks complete before dependent work
+Review parents (📋): output deps, file conflicts, type ordering (setup → work → tests).
 
-### 5b. Generate Sequential Execution Order
-Define step-by-step execution order based on dependencies:
-```markdown
-## Sequential Execution
-1. 1.1 - [Name] (no dependencies)
-2. 1.2 - [Name] (depends on 1.1)
-3. 2.1 - [Name] (depends on 1.1)
-4. 2.2 - [Name] (depends on 1.2, 2.1)
-...
-```
+### 5b. Sequential Execution
+Step-by-step order: `1. Task 1.1 (no deps) → 2. Task 1.2 (depends on 1.1) → ...`
 
-### 5c. Generate Parallel Execution Waves
-Group independent parent tasks into waves for parallel execution:
-```markdown
-## Parallel Execution
-
-### Wave 1 (concurrent)
-- 1.1, 2.1 — no dependencies, can start immediately
-- Rationale: {why these can run concurrently}
-
-### Wave 2 (after Wave 1)
-- 1.2, 2.2 — depend on Wave 1 outputs
-- Rationale: {why these depend on Wave 1}
-
-### Wave 3 (after Wave 2)
-- 3.1 — integration, needs prior waves complete
-- Rationale: {why this needs prior waves}
-```
-
-**Note**: Phases (📦) are organizational; execution planning happens at parent task (📋) level.
+### 5c. Parallel Waves
+Group independent parents: Wave 1 (no deps) → Wave 2 (depends on W1) → ... Include rationale.
 
 ---
 
-## Step 6 - Document & Output
+## Step 6: Document & Output
 
 ### 6a. Write tasks.md
-- Determine `TASKS_FILE` (default `${TASK_DIR}/specs/tasks.md`; if it already exists, create a scoped name like `${TASK_DIR}/specs/{task_name}_tasks.md` or `tasks_{timestamp}.md` to avoid overwriting).
-Save to `${TASKS_FILE}`:
+`TASKS_FILE = ${TASK_DIR}/specs/tasks.md` (use scoped name if exists)
 
-```markdown
-# Tasks — {feature name}
-*Generated by create_tasks on {timestamp}*
-
-## Objective
-{single sentence describing outcome}
-
-## Scope
-- **In Scope**: {bullet list}
-- **Out of Scope**: {bullet list}
-
-## Requirements Traced
-| ID | Description | Source | Tasks |
-|----|-------------|--------|-------|
-| REQ-001 | ... | prd.md | 1.1, 1.2 |
-| REQ-002 | ... | task_summary.md | 2.1 |
-
----
-
-## Architecture Context
-
-### Where This Fits
-- {Which system/component this work extends or modifies}
-- {How it connects to existing architecture — with file references}
-
-### Technical Approach
-- {Key pattern/approach we're following — reference existing code if applicable}
-- {Why this approach vs alternatives}
-- {What existing code we're leveraging}
-
-### Key Decisions
-- {Decision 1 and rationale}
-- {Decision 2 and rationale}
-
----
-
-## Tasks
-
-### Phase 1: {Phase Name}
-
-#### [1.1] {Parent Task Title}
-- [ ] **1.1.1** {Sub-task with technical specifics}
-  - [ ] {Technical outcome 1}
-  - [ ] {Technical outcome 2}
-  - [ ] {Technical outcome 3}
-
-- [ ] **1.1.2** {Sub-task with technical specifics}
-  - [ ] {Technical outcome 1}
-  - [ ] {Technical outcome 2}
-
-#### [1.2] {Parent Task Title}
-- [ ] **1.2.1** {Sub-task with technical specifics}
-  - [ ] {Technical outcome 1}
-  - [ ] {Technical outcome 2}
-
-### Phase 2: {Phase Name}
-...
-
----
-
-## Execution Strategies
-
-### Sequential Execution
-1. Task 1.1 - [Name] (no dependencies)
-2. Task 1.2 - [Name] (depends on 1.1)
-3. Task 2.1 - [Name] (depends on 1.1)
-...
-
-### Parallel Execution
-
-**Wave 1 (concurrent)**: 1.1, 2.1
-- Rationale: {why concurrent}
-
-**Wave 2 (after Wave 1)**: 1.2, 2.2
-- Rationale: {why sequenced}
-
-**Wave 3 (after Wave 2)**: 3.1
-- Rationale: {why sequenced}
-
----
-
-## Coverage Summary
-- Total Requirements Extracted: [X]
-- Requirements with Task Coverage: [X] (100%)
-- Phases: [N]
-- Parent Tasks: [Y]
-- Sub-tasks: [Z]
-```
+**Sections**: Header → Objective → Scope (in/out) → Requirements Traced (ID|Desc|Source|Tasks table) → Architecture Context (where fits, approach, decisions with file refs) → Tasks (Phase → Parent [1.1] → Sub-tasks with criteria) → Execution Strategies (sequential + parallel) → Coverage Summary
 
 ### 6b. Present Summary
-- **Action** — SummarizeStructure: Present concise task summary grouped by phase.
-  - Total phases, parent tasks, and sub-tasks created
-  - For each phase: list parent tasks with 1-line description
-  - Both execution strategy options
-  - Location of saved file
-  - Example format:
-    > **Task Breakdown Complete**
-    >
-    > **Structure:** {X} phases with {Y} parent tasks (📋) and {Z} sub-tasks total
-    >
-    > **Phase 1: {Phase Name}**
-    > - **1.1** {Parent 1 title} — {brief description}
-    > - **1.2** {Parent 2 title} — {brief description}
-    >
-    > **Phase 2: {Phase Name}**
-    > - **2.1** {Parent 3 title} — {brief description}
-    > - **2.2** {Parent 4 title} — {brief description}
-    >
-    > **Execution Options:**
-    > - **Sequential**: {N} ordered steps, dependency-chained
-    > - **Parallel**: {M} waves, up to {K} concurrent tasks
-    >
-    > **Saved to:** `${TASKS_FILE}`
+- **Action** — SummarizeStructure: "Task Breakdown Complete. Structure: {X} phases, {Y} parents, {Z} sub-tasks. [List phases with parent titles]. Execution: Sequential ({N} steps) | Parallel ({M} waves). Saved to: {path}"
 
 ### 6c. Next Steps Footer
-- **Action** — RenderFooter: End reply with single 60-column Next Steps footer.
+- **Action** — RenderFooter:
 
 ```
 ╔══════════════════════════════════════════════════════════╗
@@ -367,32 +128,3 @@ Save to `${TASKS_FILE}`:
 ║ - Review tasks.md — Adjust before execution              ║
 ╚══════════════════════════════════════════════════════════╝
 ```
-
----
-
-## Success Criteria
-
-- [ ] Context established, TASK_DIR determined
-- [ ] Available artifacts inventoried
-- [ ] Complexity assessed (simple vs complex)
-- [ ] Research need evaluated (NEED decision made)
-- [ ] Existing research checked if needed (HAVE decision made)
-- [ ] Research conducted or existing used appropriately
-- [ ] Requirements extracted from ALL available sources
-- [ ] Requirements numbered (REQ-XXX) and categorized
-- [ ] Boundary check passed (scope litmus test)
-- [ ] As many phases created as needed to logically organize work
-- [ ] As many parent tasks (📋) created as needed to cover complete scope
-- [ ] Parent tasks sized at small-medium scope each
-- [ ] Each parent task has as many detailed sub-tasks as needed
-- [ ] Each sub-task is atomic (single focused change) with 2-3 acceptance criteria
-- [ ] Acceptance criteria are verifiable outcomes (not implementation steps)
-- [ ] Coverage verification completed (all requirements mapped to tasks)
-- [ ] Task validation completed (coverage, exclusion, structure checks passed)
-- [ ] Dependencies mapped at parent task (📋) level
-- [ ] Sequential execution order documented
-- [ ] Parallel execution waves documented with rationale
-- [ ] Architecture Context section included (Where This Fits, Technical Approach, Key Decisions)
-- [ ] tasks doc saved without overwriting existing files (scoped filename used if `tasks.md` already present) with Objective, Scope, Architecture Context, Tasks, Execution Strategies, Coverage Summary
-- [ ] Concise summary presented grouped by phase
-- [ ] Single Next Steps footer rendered

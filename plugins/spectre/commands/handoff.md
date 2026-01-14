@@ -4,51 +4,35 @@ description: 👻 | Save state snapshot to session_logs - primary agent
 
 # handoff: Fast Session State Snapshot
 
-## Description
-- **What** — Generate a Slack-style progress update, gather context, output structured JSON for session resume
-- **Outcome** — `{timestamp}_handoff.json` in session_logs (JSON is source of truth)
+Generate progress update, gather context, output structured JSON for session resume. Output: `{timestamp}_handoff.json` in session_logs.
 
-## Performance Target
-**2 tool calls total**: 1 Bash (gather context) + 1 Write (JSON)
+**Performance Target**: 2 tool calls (1 Bash + 1 Write)
 
-## Variables
-
-### Dynamic Variables
-- `user_input`: Task name override — (via ARGUMENTS: $ARGUMENTS)
-
-### Static Variables
-- `out_dir`: docs/active_tasks/{branch_name}
-
-## ARGUMENTS Input
+## ARGUMENTS
 
 <ARGUMENTS>
 $ARGUMENTS
 </ARGUMENTS>
 
-## Step (1/2) - Gather Context (Single Bash Call)
+## Step 1: Gather Context (Single Bash Call)
 
-- **Action** — GatherContext: Run ONE bash command to get everything:
+- **Action** — GatherContext: Run ONE bash command:
 
 ```bash
 branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)
 mkdir -p "docs/active_tasks/${branch}/session_logs"
 
-# Check if beads (bd) is available and has a database
 beads_available=false
 beads_tasks='[]'
 beads_count=0
 
-if command -v bd &>/dev/null; then
-  # Check if bd doctor succeeds (database exists)
-  if bd doctor &>/dev/null; then
-    beads_available=true
-    # Fetch only actionable tasks (skip closed to reduce tokens)
-    open=$(bd list --label "$branch" --status open --json 2>/dev/null || echo '[]')
-    in_prog=$(bd list --label "$branch" --status in_progress --json 2>/dev/null || echo '[]')
-    blocked=$(bd list --label "$branch" --status blocked --json 2>/dev/null || echo '[]')
-    beads_tasks=$(echo "$open $in_prog $blocked" | jq -s 'add // []')
-    beads_count=$(echo "$beads_tasks" | jq 'length' 2>/dev/null || echo 0)
-  fi
+if command -v bd &>/dev/null && bd doctor &>/dev/null; then
+  beads_available=true
+  open=$(bd list --label "$branch" --status open --json 2>/dev/null || echo '[]')
+  in_prog=$(bd list --label "$branch" --status in_progress --json 2>/dev/null || echo '[]')
+  blocked=$(bd list --label "$branch" --status blocked --json 2>/dev/null || echo '[]')
+  beads_tasks=$(echo "$open $in_prog $blocked" | jq -s 'add // []')
+  beads_count=$(echo "$beads_tasks" | jq 'length' 2>/dev/null || echo 0)
 fi
 
 cat << EOF
@@ -64,103 +48,72 @@ cat << EOF
 EOF
 ```
 
-- **Output**: JSON with `branch`, `commit`, `wip_count`, `ts`, `beads_available`, `beads_count`, `beads` array
-- **Beads scope**: Only actionable tasks (open, in_progress, blocked) — closed tasks excluded to reduce tokens
-- **Side effect**: Creates `docs/active_tasks/{branch}/session_logs/` directory
+**Output**: JSON with branch, commit, wip_count, ts, beads_available, beads_count, beads[]
 
-### Task Sources
+**Task sources**: TodoWrite (captured by hook automatically), Beads (fetched if `bd` available)
 
-SPECTRE captures tasks from two sources:
+## Step 2: Compose & Write JSON
 
-| Source | How It Works | When Used |
-|--------|--------------|-----------|
-| **TodoWrite** | Captured automatically by hook when `/handoff` runs | Always (built into Claude Code) |
-| **Beads** | Fetched by bash script above | Only if `bd` is installed and project uses Beads |
+- **Action** — ComposeProgressUpdate: From session memory, compose using "WE" voice:
 
-You don't need to do anything special—the hook captures TodoWrite todos automatically. Beads is a bonus if the project uses it.
+  | Field | Required | Description |
+  |-------|----------|-------------|
+  | summary | ✓ | Slack-style paragraph a human would read |
+  | goal | ✓ | What we're building + success criteria |
+  | accomplished | ✓ | What we completed (2-5 bullets) |
+  | now | ✓ | **What you were actively working on when session ended** (critical!) |
+  | next_steps | ✓ | Upcoming work (2-4 bullets) |
+  | confidence | ✓ | high / medium / low |
+  | constraints | | Known constraints or assumptions |
+  | decisions | | Key decisions made (0-3 bullets) |
+  | blockers | | Things blocking progress |
+  | open_questions | | Questions needing answers |
+  | risks | | Identified risks |
 
-## Step (2/2) - Compose Progress Update & Write JSON
+  **Tone**: "We finished the auth refactor and got tests passing. Hit a snag with OAuth callback - next we'll tackle session management."
 
-- **Action** — ComposeProgressUpdate: From agent's session memory, compose update using "WE" voice:
+- **Action** — BuildWorkingSet: Capture active context:
+  - `key_files`: Files actively edited
+  - `active_ids`: Beads task IDs in progress
+  - `recent_commands`: Recent terminal commands (test, build, etc.)
 
-  **Required fields:**
-  - `summary`: Human-readable paragraph (Slack-style update a human would read)
-  - `goal`: What we're building and success criteria for this work
-  - `accomplished`: What we completed (2-5 bullets)
-  - `now`: What you were actively working on when session ended (critical for resume!)
-  - `next_steps`: What's coming up (2-4 bullets)
-  - `confidence`: high/medium/low
-
-  **Optional fields (include if relevant):**
-  - `constraints`: Known constraints or assumptions we're working under
-  - `decisions`: Key decisions we made (0-3 bullets)
-  - `blockers`: Things blocking progress (0-3 bullets)
-  - `open_questions`: Questions that need answers (different from blockers)
-  - `risks`: Identified risks
-
-  **Example tone**: "We finished the auth refactor and got tests passing. Hit a snag with the OAuth callback - tomorrow we'll tackle session management."
-
-- **Action** — BuildWorkingSet: Capture the active context:
-  - `key_files`: Files you were actively editing
-  - `active_ids`: Beads task IDs in progress (if using Beads)
-  - `recent_commands`: Commands you ran recently (test, build, etc.)
-
-- **Action** — BuildBeadsTree (if beads_available): From `beads` array in Step 1 output:
-  - Find epic (task with `type: "epic"` or no parent and has children)
-  - Build hierarchy: epic → tasks → subtasks
-  - All tasks in output are actionable (closed tasks were filtered out)
-  - Include task IDs for resume commands
+- **Action** — BuildBeadsTree (if available): From beads array, build hierarchy (epic → tasks → subtasks). Include task IDs for resume.
 
 - **Action** — WriteJSON: Save to `docs/active_tasks/{branch}/session_logs/{ts}_handoff.json`
 
-**JSON Schema:**
+**JSON Schema**:
 ```json
 {
   "version": "1.1",
   "timestamp": "{ts}",
   "branch_name": "{branch}",
   "task_name": "{ARGUMENTS or branch}",
-
   "progress_update": {
-    "summary": "Human-readable paragraph for Slack-style updates",
-    "goal": "What we're building + success criteria",
-    "constraints": ["constraint1"],
-    "decisions": ["decision1"],
-    "accomplished": ["what we completed"],
-    "now": "What I was actively working on when session ended",
-    "next_steps": ["upcoming items"],
-    "blockers": ["blocker1"],
-    "open_questions": ["question needing answer"],
+    "summary": "string",
+    "goal": "string",
+    "accomplished": ["string"],
+    "now": "string (critical for resume)",
+    "next_steps": ["string"],
     "confidence": "high|medium|low",
-    "risks": ["risk1"]
+    "constraints": ["string"],
+    "decisions": ["string"],
+    "blockers": ["string"],
+    "open_questions": ["string"],
+    "risks": ["string"]
   },
-
   "working_set": {
-    "key_files": ["path1", "path2"],
+    "key_files": ["path"],
     "active_ids": ["bd-xxxxx"],
-    "recent_commands": ["npm test", "npm run build"]
+    "recent_commands": ["command"]
   },
-
   "beads": {
-    "available": true,
+    "available": "boolean",
     "workspace_label": "{branch}",
-    "task_count": 5,
+    "task_count": "number",
     "epic_id": "bd-xxxxx|null",
-    "epic_title": "Epic title|null",
-    "tasks": [
-      {
-        "id": "bd-xxxxx",
-        "title": "Task title",
-        "status": "open|in_progress|blocked",
-        "type": "task|epic|bug|feature",
-        "parent": "bd-xxxxx|null",
-        "children": ["bd-xxxxx.1"],
-        "labels": ["worktree", "type"],
-        "completed": false
-      }
-    ]
+    "epic_title": "string|null",
+    "tasks": [{"id", "title", "status", "type", "parent", "children", "labels"}]
   },
-
   "context": {
     "wip_state": "uncommitted|clean",
     "last_commit": "abc1234"
@@ -168,70 +121,6 @@ You don't need to do anything special—the hook captures TodoWrite todos automa
 }
 ```
 
-**If Beads is not available**, the `beads` section should be:
-```json
-{
-  "beads": {
-    "available": false,
-    "workspace_label": "{branch}",
-    "task_count": 0,
-    "epic_id": null,
-    "epic_title": null,
-    "tasks": []
-  }
-}
-```
+If beads unavailable: `available: false`, `tasks: []`
 
-- **Action** — RespondToUser:
-
-  If beads available with tasks:
-  ```
-  ✓ Handoff saved: docs/active_tasks/{branch}/session_logs/{ts}_handoff.json
-    Beads: {task_count} tasks tracked for workspace "{branch}"
-
-  Start a new session or run /clear. Next session will auto-resume from this context.
-  ```
-
-  If beads not available or no tasks:
-  ```
-  ✓ Handoff saved: docs/active_tasks/{branch}/session_logs/{ts}_handoff.json
-
-  Start a new session or run /clear. Next session will auto-resume from this context.
-  ```
-
-## Success Criteria
-
-**Performance**:
-- [ ] **1 Bash call**: Context gathered + beads checked + directory created
-- [ ] **1 Write call**: JSON saved
-
-**Task Capture**:
-- [ ] TodoWrite todos captured automatically by hook (no action needed)
-- [ ] Beads checked for availability (`command -v bd` + `bd doctor`)
-- [ ] If beads available: tasks fetched with `bd list --status {open,in_progress,blocked}`
-- [ ] If beads not available: `beads.available` set to `false`, tasks array empty
-
-**Progress Update Quality**:
-- [ ] `summary` written in collaborative "we" voice (human-readable)
-- [ ] `goal` captures what we're building and success criteria
-- [ ] `accomplished` lists what we completed
-- [ ] `now` captures what was actively being worked on (critical!)
-- [ ] `next_steps` lists upcoming work
-- [ ] `confidence` level assessed (high/medium/low)
-- [ ] Optional fields included where relevant (constraints, decisions, blockers, open_questions, risks)
-
-**Working Set**:
-- [ ] `key_files` lists actively edited files
-- [ ] `active_ids` lists in-progress Beads task IDs (if using Beads)
-- [ ] `recent_commands` lists recent terminal commands
-
-**JSON Output**:
-- [ ] Output directory created if missing
-- [ ] JSON file saved with all required fields
-- [ ] Schema version is "1.1"
-- [ ] Timestamp format consistent (`YYYY-MM-DD-HHMMSS`)
-
-**Response**:
-- [ ] User notified with exact file path
-- [ ] Beads task count reported (only if available and has tasks)
-- [ ] Next steps clear (session will auto-resume)
+- **Action** — RespondToUser: "✓ Handoff saved: {path}. [If beads: {count} tasks for '{branch}']. Next session auto-resumes from this context."

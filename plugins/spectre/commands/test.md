@@ -100,11 +100,11 @@ $ARGUMENTS
   - Format: `type(scope): description`
   - Each commit answers: What changed and why?
 
-- **Action** — RenderFooter: Render Next Steps footer using `@spectre:spectre` skill (contains format template and SPECTRE command options)
+- **Action** — RenderFooter: Render Next Steps footer using `@skill-spectre:spectre` skill (contains format template and SPECTRE command options)
 
 ## Next Steps
 
-See `@spectre:spectre` skill for footer format and command options.
+See `@skill-spectre:spectre` skill for footer format and command options.
 
 ## Success Criteria
 
