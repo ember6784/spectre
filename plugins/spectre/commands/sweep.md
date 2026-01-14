@@ -49,6 +49,8 @@ For duplication: flag obvious copy-paste (>5 similar lines, 2+ instances) but do
 
 ### 6. Test Coverage (Risk-Aware)
 
+**CRITICAL**: This step is about CREATING NEW TESTS for changed code, not just running existing tests.
+
 **Quick risk triage** — prioritize test effort by file type:
 
 | Tier | Files | Coverage |
@@ -58,14 +60,18 @@ For duplication: flag obvious copy-paste (>5 similar lines, 2+ instances) but do
 | **P2 Supporting** | Utils, helpers, hooks, formatters | Light: public function smoke test |
 | **P3 Skip** | Types (.d.ts), configs, styles, index barrels, simple wrappers | No tests needed |
 
-**Execute**:
-- Write tests for P0-P2 changed behaviors (not just files)
-- P0 files: test all behaviors + error paths
-- P1 files: test happy path + 1-2 error cases
-- P2 files: test public surface only
-- P3 files: explicitly skip — no tests
-- Update test expectations for intentional behavior changes
-- Run full test suite and confirm all pass
+**Execute** (in order):
+1. **Identify new/changed behaviors** — What NEW functionality was added or modified? List specific behaviors.
+2. **Check for existing coverage** — Do tests already exist for these behaviors? If not, they need tests.
+3. **Write NEW tests** for uncovered behaviors:
+   - P0 files: write tests for all behaviors + error paths
+   - P1 files: write tests for happy path + 1-2 error cases
+   - P2 files: write tests for public surface only
+   - P3 files: explicitly skip — no tests
+4. **Update existing tests** if behavior intentionally changed
+5. **Run full test suite** and confirm all pass
+
+**Anti-pattern**: Do NOT just run existing tests and call it done. If you changed code, you likely need new tests.
 
 ### 7. Commit Strategy
 
