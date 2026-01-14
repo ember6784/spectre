@@ -5,9 +5,5 @@
   "author": {
     "name": "Joe Fernandez",
     "email": "joe@bycodename.com"
-  },
-  "commands": "commands",
-  "agents": "agents",
-  "skills": "skills",
-  "hooks": "hooks/hooks.json"
+  }
 }
