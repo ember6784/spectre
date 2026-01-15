@@ -1,6 +1,6 @@
 ---
-
-## description: 👻 | Verify scope delivery & analyze gaps - primary agent
+description: 👻 | Comprehensive post implementation requirement validation using subagents
+---
 
 # validate: Scope delivery verification and gap analysis
 
@@ -192,7 +192,7 @@
   >
   > {1-2 sentence summary of key findings}
 
-- **Action** — RenderFooter: Render Next Steps footer using `@skill-spectre:spectre` skill
+- **Action** — RenderFooter: Render Next Steps footer using `@spectre:spectre` skill
 
 ## Next Steps
 

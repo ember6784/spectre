@@ -1,5 +1,5 @@
 ---
-description: 👻 | Clear session memory - archive all session files so next session starts fresh
+description: Clear session memory - archive all session files so next session starts fresh
 ---
 
 # forget: Clear Session Memory

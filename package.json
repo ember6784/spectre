@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "tokens": "node scripts/count-tokens.js"
+    "tokens": "node scripts/count-tokens.js",
+    "release": "node scripts/release.js"
   },
   "dependencies": {
     "@anthropic-ai/tokenizer": "^0.0.4"

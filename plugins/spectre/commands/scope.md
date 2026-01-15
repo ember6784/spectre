@@ -1,6 +1,6 @@
 ---
-
-## description: 👻 | Scope features interactively - primary agent
+description: 👻 | Interactively scope a feature or improvement, generating a complete Scope document that clarifies what's IN and OUT -- primary agent
+---
 
 # scope: Interactive Feature Scoping
 
@@ -91,7 +91,7 @@ Collaborative workflow for structuring unstructured thoughts into clear scope bo
 
 **Only if scope identifies specific technical/architecture integration points.**
 
-- **Action** — IdentifyTouchpoints: Identify desired areas of research, and dispatch parallel  @codebase-analyzer subagents to research each area. Surface-level only (component names, NOT implementation). List features this interacts with, constraints worth documenting, areas to avoid.
+- **Action** — IdentifyTouchpoints: Identify desired areas of research, and dispatch parallel @codebase-analyzer subagents to research each area. Surface-level only (component names, NOT implementation). List features this interacts with, constraints worth documenting, areas to avoid.
 
 - **Action** — UpdateScopeDoc: Add findings to Integration & Constraints sections if relevant.
 

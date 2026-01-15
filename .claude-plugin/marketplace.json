@@ -1,6 +1,6 @@
 {
   "name": "codename",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "owner": {
     "name": "Joe Fernandez",
     "email": "joe@bycodename.com"
@@ -15,23 +15,51 @@
       "name": "spectre",
       "source": "./plugins/spectre",
       "description": "SPECTRE agentic workflow - Scope, Plan, Execute, Clean, Test, Release, Evaluate. Meta-prompting system where prompts invoke subagents that execute specialized prompts.",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "author": {
         "name": "Joe Fernandez",
         "email": "joe@bycodename.com"
       },
-      "keywords": ["workflow", "tdd", "planning", "code-review", "session-management", "handoff"]
+      "keywords": [
+        "workflow",
+        "tdd",
+        "planning",
+        "code-review"
+      ]
+    },
+    {
+      "name": "session-memory",
+      "source": "./plugins/session-memory",
+      "description": "Session memory for Claude Code - handoff state snapshots, auto-resume on startup, and session clearing.",
+      "version": "1.2.0",
+      "author": {
+        "name": "Joe Fernandez",
+        "email": "joe@bycodename.com"
+      },
+      "keywords": [
+        "session",
+        "memory",
+        "handoff",
+        "resume",
+        "context"
+      ]
     },
     {
       "name": "learn",
       "source": "./plugins/learn",
       "description": "Capture project knowledge into skills. Save patterns, decisions, gotchas, and procedures from conversations.",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "author": {
         "name": "Joe Fernandez",
         "email": "joe@bycodename.com"
       },
-      "keywords": ["learning", "knowledge", "patterns", "decisions", "documentation"]
+      "keywords": [
+        "learning",
+        "knowledge",
+        "patterns",
+        "decisions",
+        "documentation"
+      ]
     }
   ]
 }

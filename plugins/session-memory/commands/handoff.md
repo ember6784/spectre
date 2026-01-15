@@ -1,5 +1,5 @@
 ---
-description: 👻 | Save state snapshot to session_logs - primary agent
+description: Save state snapshot to session_logs for session resume
 ---
 
 # handoff: Fast Session State Snapshot
