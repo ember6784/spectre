@@ -124,28 +124,61 @@ else:
     sys.exit(0)
 ```
 
-## Plugin Release Process
+## Plugin Development & Release
 
-Plugins are cached by version. To release updates users can actually receive:
+Claude Code caches plugins by version. There's no hot-reload — **always restart Claude after changes**.
 
-1. **Bump version** in `plugins/spectre/plugin.json` (and `plugins/learn/plugin.json` if changed)
-2. **Commit and push** to GitHub
-3. **Users update** via `/plugin update spectre@codename`
+### Local Development (`--plugin-dir`)
+
+The official approach for plugin development:
 
 ```bash
-# Example release flow
-# 1. Edit plugin.json: "version": "1.0.0" → "1.1.0"
-# 2. Commit and push
-git add -A && git commit -m "release: bump plugin version to 1.1.0" && git push
-
-# 3. Users run:
-/plugin marketplace update codename
-/plugin update spectre@codename
+claude --plugin-dir /Users/joe/Dev/spectre/plugins/spectre --plugin-dir /Users/joe/Dev/spectre/plugins/learn
 ```
 
-**For local development**: Use `--plugin-dir` to bypass caching:
+Workflow:
+1. Edit plugin files
+2. Restart Claude with the same command
+3. Changes are active
+
+No version bumps, no cache, no reinstalls. Create an alias for convenience:
 ```bash
-claude --plugin-dir /path/to/spectre/plugins/spectre
+alias claude-dev='claude --plugin-dir /Users/joe/Dev/spectre/plugins/spectre --plugin-dir /Users/joe/Dev/spectre/plugins/learn'
+```
+
+### Testing Marketplace Distribution
+
+To test what users will experience:
+
+```bash
+# Add local marketplace
+/plugin marketplace add /Users/joe/Dev/spectre
+
+# Install from it
+/plugin install spectre@codename
+```
+
+Since plugins are cached, iterate by either:
+- **Uninstall/reinstall**: `/plugin uninstall spectre@codename` then `/plugin install spectre@codename`
+- **Bump version**: Update version in all 3 files, then `/plugin update spectre@codename`
+
+### Releasing to Users
+
+1. **Bump version in THREE files**:
+   - `plugins/spectre/plugin.json`
+   - `plugins/learn/plugin.json`
+   - `.claude-plugin/marketplace.json` (has version for each plugin)
+2. **Commit and push** to GitHub
+3. **Tag the release** (optional but recommended)
+
+```bash
+git add -A && git commit -m "release: v1.2.0" && git tag v1.2.0 && git push && git push --tags
+```
+
+Users update via:
+```bash
+/plugin marketplace update codename
+/plugin update spectre@codename
 ```
 
 ## Important Notes
