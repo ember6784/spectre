@@ -1,6 +1,6 @@
 ---
 name: learn
-description: Captures project knowledge into Skills. Use when user invokes /learn or wants to save learnings, gotchas, patterns, decisions, or procedures from a conversation.
+description: Use when user invokes /learn or wants to save patterns, decisions, gotchas, procedures, or feature knowledge from a conversation.
 ---
 
 # Learning Agent
@@ -9,19 +9,33 @@ You capture durable project knowledge into Skills that Claude Code loads on-dema
 
 ## Path Convention
 
-`{{project_root}}` refers to the root of the current project (typically the git repository root or cwd). This allows the skill to be installed at user, project, or local level while always writing learnings to the project's `.claude/skills/` directory.
+`{{project_root}}` refers to the root of the current project (typically the git repository root or cwd). Learnings are written to `{{project_root}}/.claude/skills/apply-learnings/`.
 
-## Skill Registry
-
-The registry tracks only skills created by `/learn` - not other skills in the codebase.
-
-Before proposing a learning, check for existing learnings to append to:
+## Storage Structure
 
 ```
-{{project_root}}/.claude/skills/learn/references/registry.toon
+{{project_root}}/.claude/skills/apply-learnings/
+├── SKILL.md              # Router skill (bootstrapped on first learning)
+└── references/
+    ├── registry.toon     # Index of all learnings
+    ├── patterns/
+    │   └── {slug}.md
+    ├── gotchas/
+    │   └── {slug}.md
+    ├── feature/
+    │   └── {slug}.md
+    └── ...
 ```
 
-Format: `name|category|triggers|description` (one skill per line)
+## Registry
+
+Before proposing a learning, check for existing learnings:
+
+```
+{{project_root}}/.claude/skills/apply-learnings/references/registry.toon
+```
+
+Format: `{category}/{slug}|{category}|{triggers}|{description}` (one learning per line)
 
 ## Workflow
 
@@ -46,18 +60,50 @@ Must meet **at least 2 of 4**:
 
 ### 3. Categorize
 
-| Category        | What                                                    | Slug pattern            |
+| Category        | What                                                    | Path                    |
 | --------------- | ------------------------------------------------------- | ----------------------- |
-| patterns        | Repeatable solutions                                    | `patterns-{slug}`       |
-| decisions       | Architectural choices + why                             | `decisions-{slug}`      |
-| gotchas         | Hard-won debugging knowledge                            | `gotchas-{slug}`        |
-| procedures      | Multi-step processes                                    | `procedures-{slug}`     |
-| domain          | Project-specific concepts                               | `domain-{slug}`         |
-| strategy        | Roadmap decisions, prioritization rationale, feature bets | `strategy-{slug}`     |
-| ux              | Design patterns, user research insights, interactions   | `ux-{slug}`             |
-| integration     | Third-party APIs, vendor quirks, external systems       | `integration-{slug}`    |
-| performance     | Optimization learnings, benchmarks, scaling decisions   | `performance-{slug}`    |
-| testing         | Test strategies, coverage decisions, QA patterns        | `testing-{slug}`        |
+| patterns        | Repeatable solutions                                    | `patterns/{slug}.md`    |
+| decisions       | Architectural choices + why                             | `decisions/{slug}.md`   |
+| gotchas         | Hard-won debugging knowledge                            | `gotchas/{slug}.md`     |
+| procedures      | Multi-step processes                                    | `procedures/{slug}.md`  |
+| domain          | Project-specific concepts                               | `domain/{slug}.md`      |
+| feature         | Feature implementations: design, flows, key files, tasks | `feature/{slug}.md`    |
+| strategy        | Roadmap decisions, prioritization rationale, feature bets | `strategy/{slug}.md`  |
+| ux              | Design patterns, user research insights, interactions   | `ux/{slug}.md`          |
+| integration     | Third-party APIs, vendor quirks, external systems       | `integration/{slug}.md` |
+| performance     | Optimization learnings, benchmarks, scaling decisions   | `performance/{slug}.md` |
+| testing         | Test strategies, coverage decisions, QA patterns        | `testing/{slug}.md`     |
+
+**Feature category structure**: Feature learnings are higher-level "dossiers" that help the LLM understand how a feature works end-to-end. Use this structure:
+
+```markdown
+### {Feature Name}
+
+**Trigger**: {feature name}, {related keywords}
+**Confidence**: {level}
+**Created**: {YYYY-MM-DD}
+**Updated**: {YYYY-MM-DD}
+**Version**: 1
+
+**Overview**: {1-2 sentences on what this feature does for users}
+
+**User Flows**:
+- {Primary flow}
+- {Secondary flows}
+
+**Technical Design**:
+- {Architecture summary}
+- {Key patterns used}
+
+**Key Files**:
+- `path/to/main.ts` - {purpose}
+- `path/to/component.tsx` - {purpose}
+
+**Common Tasks**:
+- {Task}: {how to approach it}
+```
+
+Use `feature` when capturing *how something works* holistically. Use other categories for specific insights (a gotcha within a feature, a pattern used by a feature, etc.).
 
 **Category doesn't fit?** Propose a new one. If the learning clearly doesn't belong in existing categories, suggest a new category with rationale:
 
@@ -73,16 +119,35 @@ Create this category? [Y/n]
 
 New categories should be general enough to hold multiple learnings, not one-offs.
 
+**Writing Effective Metadata**
+
+**Name field** (slug):
+- Letters, numbers, hyphens only (no parentheses or special chars)
+- Action-oriented gerunds aid discovery: `creating-skills` not `skill-creation`
+- Name by what you DO: `condition-based-waiting` not `async-helpers`
+
+**Description field** (frontmatter):
+- Start with "Use when..." — focus on triggering conditions
+- Describe WHEN to use, NOT what the skill does (Claude may shortcut to description and skip content)
+- Third person, max 500 characters
+- Example: `Use when tests have race conditions or pass/fail inconsistently`
+
+**Trigger keywords** (per learning):
+- Error messages: `"ENOTEMPTY"`, `"Hook timed out"`
+- Symptoms: `flaky`, `hanging`, `race condition`, `zombie`
+- Synonyms: `timeout/hang/freeze`, `cleanup/teardown/afterEach`
+- Tools: command names, library names, file types
+
 ### 4. Match, Update, or Create
 
-Read registry to find candidates, then **read the actual skill file** to compare content.
+Read registry to find candidates, then **read the actual learning file** to compare content.
 
 **Registry scan** - look for:
-- Same category prefix
+- Same category
 - Overlapping trigger keywords
 - Related topic
 
-**If candidate found**, read the skill file and check each learning:
+**If candidate found**, read `references/{category}/{slug}.md` and check:
 
 1. **UPDATE** - New knowledge contradicts, extends, or supersedes an existing learning
    - Same topic but new/better information
@@ -105,7 +170,7 @@ Stop and wait for user response. Format depends on action type:
 
 **For UPDATE** (revising existing learning):
 ```
-I'd update `{learning-title}` in `{skill-name}`:
+I'd update `{category}/{slug}.md`:
 
 **Current**: {1-2 sentence summary of existing}
 **Proposed**: {1-2 sentence summary of revision}
@@ -116,9 +181,9 @@ I'd update `{learning-title}` in `{skill-name}`:
 Update this? [Y/n/edit]
 ```
 
-**For APPEND** (new learning to existing skill):
+**For APPEND** (new learning to existing file):
 ```
-I'd add this to `{skill-name}`:
+I'd add to `{category}/{slug}.md`:
 
 **{Title}**
 
@@ -132,9 +197,9 @@ Confidence: {low|medium|high}
 Save this? [Y/n/edit]
 ```
 
-**For CREATE** (new skill):
+**For CREATE** (new learning file):
 ```
-I'd create a new skill `{category}-{slug}`:
+I'd create `{category}/{slug}.md`:
 
 **{Title}**
 
@@ -160,27 +225,15 @@ Create this? [Y/n/edit]
 - `edit` or custom text -> modify first
 - Different skill name -> use that instead
 
-### 7. Write
+### 7. Write Learning
 
-**CREATE** - New skill at `{{project_root}}/.claude/skills/{name}/SKILL.md`:
+**Location**: `{{project_root}}/.claude/skills/apply-learnings/references/{category}/{slug}.md`
+
+**CREATE** - New learning file:
 
 ```markdown
----
-name: {category}-{slug}
-description: {Topic}. Use when {trigger conditions}.
----
-
 # {Title}
 
-## When to Load
-
-- {Condition 1}
-- {Condition 2}
-
-## Learnings
-
-### {Learning Title}
-
 **Trigger**: {keywords}
 **Confidence**: {level}
 **Created**: {YYYY-MM-DD}
@@ -192,12 +245,19 @@ description: {Topic}. Use when {trigger conditions}.
 {Code if relevant}
 ```
 
-**APPEND** - Add new learning section to existing skill:
+**UPDATE** - Revise existing learning file:
+
+1. Preserve `**Created**` date
+2. Set `**Updated**` to today
+3. Increment `**Version**` by 1
+4. Update confidence if warranted (e.g., low → medium after verification)
+
+**APPEND** - For files with multiple learnings, add new section:
 
 ```markdown
 ---
 
-### {Learning Title}
+## {New Learning Title}
 
 **Trigger**: {keywords}
 **Confidence**: {level}
@@ -206,49 +266,18 @@ description: {Topic}. Use when {trigger conditions}.
 **Version**: 1
 
 {Explanation}
-
-{Code if relevant}
-```
-
-**UPDATE** - Replace existing learning section in-place:
-
-1. Find the learning section by title (### header)
-2. Replace entire section with revised content
-3. Preserve `**Created**` date from original
-4. Set `**Updated**` to today
-5. Increment `**Version**` by 1
-6. Update confidence level if warranted (e.g., low -> medium after verification)
-
-```markdown
-### {Same Learning Title}
-
-**Trigger**: {updated keywords if changed}
-**Confidence**: {same or upgraded}
-**Created**: {preserved from original}
-**Updated**: {today}
-**Version**: {previous + 1}
-
-{Revised explanation}
-
-{Updated code if relevant}
 ```
 
 ### 8. Update Registry
 
-After writing, add/update the skill entry in `{{project_root}}/.claude/skills/learn/references/registry.toon`:
+Add/update entry in `{{project_root}}/.claude/skills/apply-learnings/references/registry.toon`:
 
 ```
-{name}|{category}|{trigger,keywords}|{short description}
+{category}/{slug}|{category}|{trigger,keywords}|{short description}
 ```
 
 ### 9. Confirm
 
 ```
-Saved {{project_root}}/.claude/skills/{name}/SKILL.md
-```
-
-or
-
-```
-Updated {{project_root}}/.claude/skills/{name}/SKILL.md
+Saved .claude/skills/apply-learnings/references/{category}/{slug}.md
 ```
