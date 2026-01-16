@@ -39,13 +39,13 @@ $ARGUMENTS
 **Files Modified/Created**: [list with purposes]
 **Related Files**: [dependencies, tests, config]
 **Requirements**: [acceptance criteria for completed work]
-**Docs**: `docs/active_tasks/{task_name}/` - note which exist (task_summary, plan, tasks)
+**Docs**: `docs/tasks/{task_name}/` - note which exist (task_summary, plan, tasks)
 
 ---
 
 #### Phase 1: Context & Scope Boundaries
 
-1. Read task docs in `docs/active_tasks/{task_name}/`
+1. Read task docs in `docs/tasks/{task_name}/`
 2. Identify code scope from task documentation
 3. Establish boundaries:
 
@@ -90,7 +90,7 @@ $ARGUMENTS
 6. Scores (0-10): Security | Logic | Quality | Production Readiness
 7. Prioritized action plan
 
-**Save to**: `docs/active_tasks/{task_name}/reviews/comprehensive_code_review.md` (use timestamped variant if exists)
+**Save to**: `docs/tasks/{task_name}/reviews/comprehensive_code_review.md` (use timestamped variant if exists)
 
 **Response**: Summary of HIGH+ items only, point to file. Do not perform fixes.
 
@@ -125,6 +125,6 @@ $ARGUMENTS
 
 ```bash
 branch_name=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)
-OUT_DIR=${target_dir:-docs/active_tasks/$branch_name}
+OUT_DIR=${target_dir:-docs/tasks/$branch_name}
 mkdir -p "$OUT_DIR/reviews"
 ```

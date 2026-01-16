@@ -18,7 +18,7 @@ description: 👻 | Create implementation plan from PRD - primary agent
 - **Action** — DetermineOutputDir:
 
   - `branch_name=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)`
-  - `OUT_DIR=docs/active_tasks/{branch_name}` (or user-specified path)
+  - `OUT_DIR=docs/tasks/{branch_name}` (or user-specified path)
   - `mkdir -p "${OUT_DIR}/specs" "${OUT_DIR}/clarifications"`
 
 - **Action** — CheckExistingResearch: Read `{OUT_DIR}/task_context.md` for "## Technical Research"

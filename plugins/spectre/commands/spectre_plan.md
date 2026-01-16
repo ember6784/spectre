@@ -47,7 +47,7 @@ $ARGUMENTS
 
 ## Step 4: Create Implementation Plan
 
-- **Action** — DetermineOutputDir: `OUT_DIR=docs/active_tasks/{branch}/specs`, mkdir
+- **Action** — DetermineOutputDir: `OUT_DIR=docs/tasks/{branch}/specs`, mkdir
 
 - **Action** — ValidateAgainstScope: Before creating tasks:
   - Can cite scope items for each task?

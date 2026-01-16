@@ -4,7 +4,7 @@ description: 👻 | Project kickoff with deep research & MVP pathfinding - prima
 
 # kickoff: Deep Codebase Research + MVP Path Discovery
 
-Comprehensive codebase research, external best practices, and MVP implementation path with file:line evidence. Output: kickoff document with architecture insights, gap analysis, and implementation options saved to `docs/active_tasks/{task_name}/kickoff/`.
+Comprehensive codebase research, external best practices, and MVP implementation path with file:line evidence. Output: kickoff document with architecture insights, gap analysis, and implementation options saved to `docs/tasks/{task_name}/kickoff/`.
 
 ## ARGUMENTS
 
@@ -60,7 +60,7 @@ $ARGUMENTS
 
 - **Action** — DetermineOutputDir:
   - Derive `task_name` from context (kebab-case)
-  - `OUT_DIR = user_specified || docs/active_tasks/{task_name}/kickoff`
+  - `OUT_DIR = user_specified || docs/tasks/{task_name}/kickoff`
   - `mkdir -p "$OUT_DIR"`
 
 - **Action** — CreateDocument: Structure with YAML frontmatter (date, git_commit, branch, repo, topic, tags, status).

@@ -14,7 +14,7 @@ description: Clear session memory - archive all session files so next session st
 
 ```bash
 branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)
-session_dir="docs/active_tasks/${branch}/session_logs"
+session_dir="docs/tasks/${branch}/session_logs"
 archive_dir="${session_dir}/archive"
 
 # Check if session logs exist
@@ -44,7 +44,7 @@ echo "ARCHIVED:${archived_count}"
   **Else** (output is `ARCHIVED:N`):
   > ✓ Session memory cleared
   >
-  > Archived {N} handoff file(s) to `docs/active_tasks/{branch}/session_logs/archive/`
+  > Archived {N} handoff file(s) to `docs/tasks/{branch}/session_logs/archive/`
   >
   > **Next**: Start a new session with `/clear` or close this terminal. Your next session will start fresh without auto-loaded context.
 

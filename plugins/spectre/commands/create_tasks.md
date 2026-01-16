@@ -15,7 +15,7 @@ Transform requirements into detailed, actionable task lists with dependency anal
 
 ### 1a. Determine Output Location
 
-- `TASK_DIR = user_specified || docs/active_tasks/{branch_name}`
+- `TASK_DIR = user_specified || docs/tasks/{branch_name}`
 - `mkdir -p "${TASK_DIR}/specs" "${TASK_DIR}/research" "${TASK_DIR}/clarifications"`
 
 ### 1b. Determine Depth

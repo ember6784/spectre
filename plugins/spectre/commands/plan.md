@@ -22,7 +22,7 @@ $ARGUMENTS
 ## Step 1 - Research Codebase
 
 - **Action** — DetermineOutputDir:
-  - `OUT_DIR=docs/active_tasks/{branch_name}` (or user-specified)
+  - `OUT_DIR=docs/tasks/{branch_name}` (or user-specified)
   - `mkdir -p "${OUT_DIR}"`
 
 - **Action** — CheckExistingResearch: Read `{OUT_DIR}/task_context.md` for "## Technical Research"

@@ -8,7 +8,7 @@ Writes todos DIRECTLY to session_logs/ alongside handoff.json files.
 This hook:
 1. Listens for "handoff" in the user's prompt
 2. Uses the session_id from hook input to find Claude Code's todo files
-3. Writes {timestamp}_todos.json to docs/active_tasks/{branch}/session_logs/
+3. Writes {timestamp}_todos.json to docs/tasks/{branch}/session_logs/
 4. Maintains todos_history.json with last 5 sessions
 
 Output: JSON with {"decision": "allow"} to let the command proceed
@@ -131,7 +131,7 @@ def capture_todos(session_id: str, cwd: str):
     # Only write if we found todos
     if all_todos["primary"] or all_todos["subagents"]:
         branch = get_git_branch()
-        session_dir = Path(cwd) / "docs" / "active_tasks" / branch / "session_logs"
+        session_dir = Path(cwd) / "docs" / "tasks" / branch / "session_logs"
         session_dir.mkdir(parents=True, exist_ok=True)
 
         timestamp = datetime.now().strftime("%Y-%m-%d-%H%M%S")

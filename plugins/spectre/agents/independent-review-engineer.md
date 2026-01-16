@@ -118,7 +118,7 @@ Remember: Your goal is to help improve the work through independent, expert anal
 **IMPORTANT - wMANDATORY DOCUMENTATION**: You MUST always save your analysis to a markdown document:
 
 **Directory Structure:**
-- **If working within an active task**: Save to `docs/active_tasks/{task_name}/reviews/`
+- **If working within an active task**: Save to `docs/tasks/{task_name}/reviews/`
 - **If general review outside active task**: Save to `docs/reviews/`.
 - Create these directories if they don't exist
 

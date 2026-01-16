@@ -53,7 +53,7 @@ def setup_git_repo(tmp_path: Path, branch: str = "main") -> Path:
     )
 
     # Create session_logs directory
-    session_dir = tmp_path / "docs" / "active_tasks" / branch / "session_logs"
+    session_dir = tmp_path / "docs" / "tasks" / branch / "session_logs"
     session_dir.mkdir(parents=True)
 
     return session_dir
@@ -65,7 +65,7 @@ class TestHandoffResume:
     def test_no_session_dir_exits_silently(self, tmp_path, monkeypatch):
         """When session_logs directory doesn't exist, exit silently with no output."""
         monkeypatch.chdir(tmp_path)
-        # No docs/active_tasks/{branch}/session_logs exists
+        # No docs/tasks/{branch}/session_logs exists
 
         result = subprocess.run(
             [sys.executable, str(SCRIPT_PATH)],

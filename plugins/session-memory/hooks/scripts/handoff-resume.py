@@ -519,7 +519,7 @@ def main():
     branch_name = get_git_branch()
 
     # Find session logs directory
-    session_dir = project_dir / "docs" / "active_tasks" / branch_name / "session_logs"
+    session_dir = project_dir / "docs" / "tasks" / branch_name / "session_logs"
 
     # Find latest handoff
     latest_handoff = find_latest_handoff(session_dir)

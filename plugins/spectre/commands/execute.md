@@ -18,7 +18,7 @@ $ARGUMENTS
   - `concepts/scope.md`, `specs/prd.md`, `specs/ux.md`, `specs/plan.md`, `specs/tasks.md`, `task_summary.md`
   - Store existing paths as `SCOPE_DOCS` for subagent dispatch
 
-- **Action** — LoadTaskList: Read `docs/active_tasks/{branch}/specs/tasks.md` or Beads tasks
+- **Action** — LoadTaskList: Read `docs/tasks/{branch}/specs/tasks.md` or Beads tasks
   - Identify wave structure and first wave
 
 - **Action** — ExecuteAdaptiveLoop: Until all tasks complete:

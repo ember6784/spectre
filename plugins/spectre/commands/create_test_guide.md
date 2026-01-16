@@ -6,7 +6,7 @@ description: 👻 | Generate right-sized manual test guides - primary agent
 
 ### Description
 - Description — Generate appropriately scoped manual testing guides that validate completed work, highlight key risks, and keep quality efforts aligned with tas scope. Scale complexity to match change size.
-- Desired Outcome — Feature-based testing guide with actionable checklists organized by user workflows, saved to `docs/active_tasks/{task_name}/testing/{task_name}_test_guide.md`.
+- Desired Outcome — Feature-based testing guide with actionable checklists organized by user workflows, saved to `docs/tasks/{task_name}/testing/{task_name}_test_guide.md`.
 
 ## ARGUMENTS Input
 
@@ -45,7 +45,7 @@ $ARGUMENTS
 - **Output Location** — DetermineOutputDir: Decide where to save artifacts for this workflow.
   - `branch_name=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)`
   - **If** user specifies `target_dir/path` → `OUT_DIR={that value}`
-  - **Else** → `OUT_DIR=docs/active_tasks/{branch_name}`
+  - **Else** → `OUT_DIR=docs/tasks/{branch_name}`
   - `mkdir -p "OUT_DIR/testing"`
 - **Action** — CreateGuide: Generate comprehensive testing guide with feature-based organization.
   - Save to `{OUT_DIR}/testing/{branch_name}_test_guide.md`
@@ -82,7 +82,7 @@ $ARGUMENTS
 - **Action** — PresentDelivery: Present guide with testing coverage summary.
   > **📋 Test Guide Created**
   >
-  > **Location**: `docs/active_tasks/{task_name}/testing/{task_name}_test_guide.md`
+  > **Location**: `docs/tasks/{task_name}/testing/{task_name}_test_guide.md`
   >
   > **Coverage**:
   > - {X} feature workflows/scenarios

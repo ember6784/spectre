@@ -20,7 +20,7 @@ $ARGUMENTS
 
 ```bash
 branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)
-mkdir -p "docs/active_tasks/${branch}/session_logs"
+mkdir -p "docs/tasks/${branch}/session_logs"
 
 beads_available=false
 beads_tasks='[]'
@@ -79,7 +79,7 @@ EOF
 
 - **Action** — BuildBeadsTree (if available): From beads array, build hierarchy (epic → tasks → subtasks). Include task IDs for resume.
 
-- **Action** — WriteJSON: Save to `docs/active_tasks/{branch}/session_logs/{ts}_handoff.json`
+- **Action** — WriteJSON: Save to `docs/tasks/{branch}/session_logs/{ts}_handoff.json`
 
 **JSON Schema**:
 ```json

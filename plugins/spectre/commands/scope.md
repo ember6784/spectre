@@ -51,7 +51,7 @@ Collaborative workflow for structuring unstructured thoughts into clear scope bo
 - **Action** — DetermineOutputDir:
 
   - **If** FROM_KICKOFF → use same dir as kickoff doc
-  - **Else** → `OUT_DIR = user_specified || docs/active_tasks/{branch_name}`
+  - **Else** → `OUT_DIR = user_specified || docs/tasks/{branch_name}`
   - `mkdir -p "$OUT_DIR"`
 
 - **Action** — GenerateTargetedQuestions: Create 3-6 questions based ONLY on remaining scope ambiguities from Step 2 (or kickoff's "Remaining Ambiguities").

@@ -68,7 +68,7 @@ $ARGUMENTS
 ## Step 5 - Create Plan
 
 - **Action** — DetermineOutputDir:
-  - `OUT_DIR=docs/active_tasks/{branch_name}` (or user-specified)
+  - `OUT_DIR=docs/tasks/{branch_name}` (or user-specified)
   - `mkdir -p "${OUT_DIR}/specs"`
 
 - **Action** — GeneratePlan: Create `{OUT_DIR}/specs/quick_task_plan.md` (use scoped name if exists)

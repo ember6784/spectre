@@ -26,8 +26,8 @@ description: 👻 | Comprehensive post implementation requirement validation usi
 
     > "What should I validate against? Please provide:
     >
-    > - Path to scope document (e.g., `docs/active_tasks/main/scope.md`)
-    > - Path to tasks document (e.g., `docs/active_tasks/main/tasks.md`)
+    > - Path to scope document (e.g., `docs/tasks/main/scope.md`)
+    > - Path to tasks document (e.g., `docs/tasks/main/tasks.md`)
     > - Or say 'use thread context' to validate against our conversation"
 
   - **Wait** — User provides validation inputs
@@ -122,7 +122,7 @@ description: 👻 | Comprehensive post implementation requirement validation usi
 
   - `branch_name=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)`
   - **If** user specifies path → `OUT_DIR={that value}`
-  - **Else** → `OUT_DIR=docs/active_tasks/{branch_name}`
+  - **Else** → `OUT_DIR=docs/tasks/{branch_name}`
   - `mkdir -p "${OUT_DIR}/validation"`
 
 - **Action** — CreateValidationGapsDoc: Generate `{OUT_DIR}/validation/validation_gaps.md`.

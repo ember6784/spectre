@@ -74,7 +74,7 @@ $ARGUMENTS
 - **Output Location** — DetermineOutputDir: Decide where to save artifacts for this workflow.
   - `branch_name=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)`
   - **If** user specifies `target_dir/path` → `OUT_DIR={that value}`
-  - **Else** → `OUT_DIR=docs/active_tasks/{branch_name}`
+  - **Else** → `OUT_DIR=docs/tasks/{branch_name}`
   - `mkdir -p "OUT_DIR/research"`
 - **Action** — CreateDocument: Structure research document with YAML frontmatter and comprehensive findings.
   - **Frontmatter** (YAML at top):
