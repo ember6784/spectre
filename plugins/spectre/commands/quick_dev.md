@@ -28,6 +28,8 @@ $ARGUMENTS
 
 **Scope is about WHAT we're building, not HOW.** Technical approach comes from research.
 
+**DO NOT ask about**: implementation approach or technical decisions — research answers those.
+
 - **Action** — PresentScope:
   > **📋 Scope Confirmation**
   >
@@ -37,11 +39,13 @@ $ARGUMENTS
   >
   > **❌ Out of Scope**: {what we're NOT building}
   >
+  > **UX Assumptions**: {how you imagine the user flow working}
+  >
   > **Constraints**: {user-provided only}
   >
-  > Reply with corrections or "Confirmed".
+  > Any items to move between IN/OUT? Clarify UX flow? Reply with changes or 'Confirmed'.
 
-- **Wait** — User confirms or corrects
+- **Wait** — User confirms or provides changes (apply and proceed)
 
 ## Step 3 - Research
 
@@ -56,10 +60,10 @@ $ARGUMENTS
 
 ## Step 4 - Clarify Ambiguities
 
-- **Action** — AskClarifyingQuestions: Use AskUserQuestion tool for 3-5 questions
-  - **Only ask** what research couldn't answer: scope edge cases, UX preferences, trade-off decisions
+- **Action** — AskClarifyingQuestions: Use AskUserQuestion tool for 2-4 questions
+  - **Only ask** what research revealed needs user decision: UX preferences, behavioral trade-offs
   - For multi-option questions: include Pros/Cons/Trade-offs
-  - **Never ask** technical questions answerable by code
+  - **Never ask** scope questions (settled in Step 2) or technical questions answerable by code
 
 ## Step 5 - Create Plan
 

@@ -6,6 +6,9 @@ grove-logs/
 node_modules/
 package-lock.json
 
+## worktrees
+.codename-grove
+
 # Python
 __pycache__/
 *.py[cod]

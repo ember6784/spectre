@@ -1,7 +1,6 @@
 ---
 description: 👻 | Interactively scope a feature or improvement, generating a complete Scope document that clarifies what's IN and OUT -- primary agent
 ---
-
 # scope: Interactive Feature Scoping
 
 Collaborative workflow for structuring unstructured thoughts into clear scope boundaries through contextual brainstorming and targeted clarifications. Focuses on user value and scope boundaries before technical considerations. Output: comprehensive scope document with clear boundaries, user value, and key decisions saved to `{OUT_DIR}/concepts/scope.md`.
@@ -22,24 +21,30 @@ Collaborative workflow for structuring unstructured thoughts into clear scope bo
 
 **SKIP IF FROM_KICKOFF=true**
 
-- **Action** — ExploreScope: Brief contextual dialogue (2-3 exchanges max).
+- **Action** — ExploreScope: Collaborative dialogue focused on boundaries.
 
-  **CRITICAL**: Never ask empty questions. Always include contextual suggestions based on user input. **Pattern**: "Based on \[context\], I'm thinking \[specific suggestion\]. Is that right?"
+  **CRITICAL**: Focus on WHAT, not HOW. Defer all technical/implementation questions until scope boundaries are finalized. Only ask technical questions if the scope itself is inherently technical (e.g., "migrate database from X to Y").
 
-  **Topics** (with contextual hypotheses):
+  **Pattern**: Always propose concrete suggestions. "Based on \[context\], I'm thinking \[specific\]. Is that right?"
 
-  1. **User Problem & Value**: Formulate hypothesis. "Based on \[X\], the core problem seems to be \[Y\]. Is that right?"
-  2. **Success Outcomes**: Present 2-4 concrete criteria. "I'm imagining success as: ✅ (1)..., (2)..., (3)... What would you adjust?"
-  3. **Scope Boundaries**: Propose 3-5 OUT items. "I'd suggest OUT of scope: ❌ \[list\]. Do these boundaries feel right?"
-  4. **Initial Decisions**: Identify 2-3 key decisions with options/trade-offs.
+  **Topics** (priority order - complete each before moving on):
 
-- **Action** — SummarizeExploration: Confirm understanding before clarifications.
+  1. **User Problem & Value**: Formulate hypothesis. "The core problem seems to be \[Y\]. Is that right?"
+  2. **Scope Boundaries**: This is the core work. Propose both IN and OUT lists. "I'd suggest IN: ✅ \[list\] and OUT: ❌ \[list\]. What would you move?"
+  3. **UX Assumptions:** Identify the primary user flows. Is anything ambiguous? “How do you imagine X working? I could see the user flow being 1)… 2)…."
+  4. **Edge Cases**: Identify ambiguous items. "I'm unsure about \[X\] - should that be IN or OUT?"
+  5. **Success Outcomes**: Present 2-4 criteria tied to IN items only.
 
-  > **My Understanding**: **Core Problem**: \[specific\] **User Value**: \[why it matters\] **In Scope**: \[3-5 items\] **Out of Scope**: \[3-5 items\] **Decisions Needed**: \[specific ambiguities to clarify\]
+  **DO NOT ask about**: implementation approach, technical trade-offs, architecture, or integration details until boundaries are confirmed. 
+
+
+- **Action** — IterateBoundaries: Continue refining IN/OUT until user confirms.
+
+  > **Current Boundaries**: ✅ **IN**: \[list\] ❌ **OUT**: \[list\] ⚠️ **Unsure**: \[edge cases\]
   >
-  > Does this match? Any corrections before targeted questions?
+  > Any items to move? Add exclusions? Clarify edges? Reply ‘looks good' to continue.
 
-- **Wait** — User confirms or corrects
+- **Wait** — User confirms Scope boundaries are accurate
 
 ## Step 3: Generate Targeted Clarifications
 
@@ -49,17 +54,14 @@ Collaborative workflow for structuring unstructured thoughts into clear scope bo
   - **Else** → `OUT_DIR = user_specified || docs/active_tasks/{branch_name}`
   - `mkdir -p "$OUT_DIR"`
 
-- **Action** — GenerateTargetedQuestions: Create 5-8 questions based ONLY on ambiguities from Step 2 (or kickoff's "Remaining Ambiguities").
+- **Action** — GenerateTargetedQuestions: Create 3-6 questions based ONLY on remaining scope ambiguities from Step 2 (or kickoff's "Remaining Ambiguities").
 
-  **CRITICAL**: Only ask about unresolved ambiguities. Do NOT repeat clarified items.
-
-  **Focus areas** (priority order): Scope boundary edge cases → Trade-off decisions (with pros/cons) → UX specifics → Constraints → Integration points
+  **CRITICAL**: Only ask about unresolved scope ambiguities. Technical questions (architecture, trade-offs, integration) belong in `/spectre:plan`, not here.
 
 - **Action** — SaveClarifications: Create `{OUT_DIR}/clarifications/scope_clarifications_{timestamp}.md`:
 
-  - Header: concept name, source (kickoff or exploration), context summary
-  - Instructions: Answer in `<response>` blocks
-  - Questions 1-8: Each with options (if trade-off) showing pros/cons/impact, then `<response>Preferred: | Notes:</response>`
+  - Header: concept name, confirmed boundaries so far
+  - Questions: Each focused on a scope edge case with `<response></response>` block
 
 - **Action** — PromptUser: "Saved clarifications to `{path}`. Answer in `<response>` blocks. Reply 'Read it' when ready."
 
@@ -75,17 +77,17 @@ Collaborative workflow for structuring unstructured thoughts into clear scope bo
 
   **Sections**: The Problem (pain, impact, current state) → Target Users (primary, secondary, needs) → Success Criteria (outcomes, metrics) → User Experience (journeys, principles, trade-offs) → Scope Boundaries (in/out/maybe/future) → Constraints (platform, perf, a11y, scale) → Integration (touches, avoids, dependencies) → Decisions (from clarifications + rationale) → Risks (UX, scope creep, open questions) → Next Steps (`/spectre:plan` or `/spectre:create_tasks`, complexity S/M/L)
 
-## Step 5: Iterative Refinement
+## Step 5: Document Review
 
-- **Action** — PresentDraftBoundaries:
+- **Action** — PresentDocForReview: Show final boundaries from document.
 
-  > **Draft Boundaries**: ✅ **In Scope**: \[3-5 key features\] ❌ **Out of Scope**: \[3-5 exclusions\] ⚠️ **Maybe**: \[2-3 items\] ❓ **Open**: \[unresolved questions\]
+  > **Final Boundaries**: ✅ **IN**: \[from doc\] ❌ **OUT**: \[from doc\] ⚠️ **Maybe/Future**: \[from doc\]
   >
-  > Adjustments? Move items between categories, add exclusions, tighten MVP, clarify priorities. Reply with changes or 'Looks good'.
+  > Any final adjustments before we finalize? Reply with changes or 'Looks good'.
 
-- **Action** — RefineScope: Update scope doc based on feedback. Allow 1-2 rounds.
+- **Action** — ApplyFeedback: Update scope doc if user provides changes.
 
-- **Wait** — User confirms boundaries
+- **Wait** — User confirms
 
 ## Step 6: Light Technical Context (Optional)
 
