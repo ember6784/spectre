@@ -1,6 +1,6 @@
 {
   "name": "subspace",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "owner": {
     "name": "Joe Fernandez",
     "email": "joe@subspace.build"
@@ -15,7 +15,7 @@
       "name": "spectre",
       "source": "./plugins/spectre",
       "description": "SPECTRE Agentic Feature Development Workflow - Scope, Plan, Execute, Clean, Test, Release, Evaluate. Meta-prompting system where prompts invoke subagents that execute specialized prompts.",
-      "version": "1.3.2",
+      "version": "1.4.0",
       "author": {
         "name": "Joe Fernandez",
         "email": "joe@subspace.build"
@@ -48,7 +48,7 @@
       "name": "learn",
       "source": "./plugins/learn",
       "description": "Build project level knowledge over time that your Agent automatically loads when relevant. Save patterns, decisions, gotchas, product strategy, and procedures from conversations, and Agent will automatically load them when relevant.",
-      "version": "1.2.1",
+      "version": "2.0.0",
       "author": {
         "name": "Joe Fernandez",
         "email": "joe@subspace.build"
