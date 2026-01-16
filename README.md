@@ -270,6 +270,7 @@ spectre setup --skip-skill
 ### Utilities
 | Command | Description |
 |---------|-------------|
+| `/spectre:ux_spec` | UX specification for UI-heavy features |
 | `/spectre:create_plan` | Generate technical design doc |
 | `/spectre:create_tasks` | Detailed task breakdown |
 | `/spectre:code_review` | Independent code review |

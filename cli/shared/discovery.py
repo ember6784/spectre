@@ -211,7 +211,7 @@ def load_agent_instructions(agent_path: Path) -> str:
 # =============================================================================
 
 # Valid command name pattern: alphanumeric, hyphen, underscore
-# Supports namespaced commands with colon separator (e.g., spectre:sweep)
+# Supports namespaced commands with colon separator (e.g., spectre:scope)
 # Commands can optionally start with /
 COMMAND_NAME_PATTERN = re.compile(r"^/?[a-zA-Z0-9_-]+$")
 NAMESPACED_COMMAND_PATTERN = re.compile(r"^/?([a-zA-Z0-9_-]+):([a-zA-Z0-9_-]+)$")
@@ -223,7 +223,7 @@ def validate_command_name(name: str) -> str:
     Strips leading / if present. Raises ValueError if name contains unsafe characters.
     Returns the normalized name (without leading /).
 
-    Supports both simple names (e.g., "deploy") and namespaced names (e.g., "spectre:sweep").
+    Supports both simple names (e.g., "deploy") and namespaced names (e.g., "spectre:scope").
     """
     if not name:
         raise ValueError("Command name cannot be empty")
@@ -308,10 +308,10 @@ def get_command_sources(project_root: Path | None = None) -> list[CommandSource]
 def find_command(name: str, sources: list[CommandSource]) -> tuple[Path, CommandSource] | None:
     """Find command by name, respecting source priority.
 
-    Supports both simple names (e.g., "deploy") and namespaced names (e.g., "spectre:sweep").
+    Supports both simple names (e.g., "deploy") and namespaced names (e.g., "spectre:scope").
     Namespaced commands can be stored as:
-    - Subdirectories: commands/spectre/sweep.md (user/project commands)
-    - Flat files in plugins: plugin:spectre -> commands/sweep.md
+    - Subdirectories: commands/spectre/scope.md (user/project commands)
+    - Flat files in plugins: plugin:spectre -> commands/scope.md
 
     Args:
         name: Command name (with or without leading /)
@@ -334,14 +334,14 @@ def find_command(name: str, sources: list[CommandSource]) -> tuple[Path, Command
     if ":" in clean_name:
         namespace, cmd_name = clean_name.split(":", 1)
         for source in sorted(sources, key=lambda s: s.priority):
-            # First, look in namespace subdirectory (e.g., commands/spectre/sweep.md)
+            # First, look in namespace subdirectory (e.g., commands/spectre/scope.md)
             command_path = source.path / namespace / f"{cmd_name}.md"
             if command_path.is_file():
                 debug(f"Found command '/{clean_name}' at {command_path}")
                 return (command_path, source)
 
             # For plugin sources, also check flat structure if namespace matches plugin name
-            # e.g., plugin:spectre source -> commands/sweep.md for /spectre:sweep
+            # e.g., plugin:spectre source -> commands/scope.md for /spectre:scope
             if source.source_type == "plugin" and source.name == f"plugin:{namespace}":
                 command_path = source.path / f"{cmd_name}.md"
                 if command_path.is_file():

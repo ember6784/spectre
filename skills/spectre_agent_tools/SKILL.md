@@ -1,6 +1,6 @@
 ---
 name: spectre_agent_tools
-description: "Use this skill when you see @name or /name patterns in user input without file identifiers. This means the user is trying to call a subagent or slash command using Spectre Agent Tools. The @ prefix dispatches to a subagent (e.g., '@tdd-agent write tests', '@code-reviewer check this file'). The / prefix executes a slash command (e.g., '/spectre:sweep', '/spectre:scope'). Both require Spectre CLI to run specialized agents and predefined prompts."
+description: "Use this skill when you see @name or /name patterns in user input without file identifiers. This means the user is trying to call a subagent or slash command using Spectre Agent Tools. The @ prefix dispatches to a subagent (e.g., '@tdd-agent write tests', '@code-reviewer check this file'). The / prefix executes a slash command (e.g., '/spectre:scope', '/spectre:plan'). Both require Spectre CLI to run specialized agents and predefined prompts."
 ---
 
 # Spectre CLI - Subagents & Slash Commands
@@ -13,7 +13,7 @@ description: "Use this skill when you see @name or /name patterns in user input 
 |---------|---------|--------|
 | `@agent-name "task"` | `@tdd-agent "write tests"` | Run `spectre subagent run tdd-agent "write tests"` |
 | `@agent-name 'task'` | `@code-reviewer 'review api.py'` | Run `spectre subagent run code-reviewer "review api.py"` |
-| `/command-name` | `/spectre:sweep` | Run `spectre command get /spectre:sweep`, then execute returned prompt |
+| `/command-name` | `/spectre:scope` | Run `spectre command get /spectre:scope`, then execute returned prompt |
 | `/command-name args` | `/deploy backend prod` | Run `spectre command get /deploy backend prod`, then execute returned prompt |
 
 **Pattern Recognition**:
@@ -199,9 +199,9 @@ When you see `/command-name` in user input:
 ### Examples
 
 <example>
-User: /spectre:sweep
+User: /spectre:clean
 Action:
-  1. Run `spectre command get /spectre:sweep`
+  1. Run `spectre command get /spectre:clean`
   2. Read the returned prompt
   3. Execute that prompt (it's a cleanup workflow)
 </example>
