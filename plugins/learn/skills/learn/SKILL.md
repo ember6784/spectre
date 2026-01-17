@@ -35,7 +35,9 @@ Before proposing a learning, check for existing learnings:
 {{project_root}}/.claude/skills/apply-learnings/references/registry.toon
 ```
 
-Format: `{category}/{slug}|{category}|{triggers}|{description}` (one learning per line)
+Format: `{path}|{category}|{triggers}|{description}` (one learning per line)
+
+Example: `references/feature/learn-plugin.md|feature|learn plugin, /learn|How the learn plugin works`
 
 ## Workflow
 
@@ -273,8 +275,10 @@ Create this? [Y/n/edit]
 Add/update entry in `{{project_root}}/.claude/skills/apply-learnings/references/registry.toon`:
 
 ```
-{category}/{slug}|{category}|{trigger,keywords}|{short description}
+references/{category}/{slug}.md|{category}|{trigger,keywords}|{short description}
 ```
+
+The path must be relative to `.claude/skills/apply-learnings/` so the apply-learnings skill can read it directly.
 
 ### 9. Confirm
 
