@@ -22,6 +22,7 @@ const readJSON = (path) => JSON.parse(readFileSync(path, 'utf8'));
 const writeJSON = (path, data) => writeFileSync(path, JSON.stringify(data, null, 2) + '\n');
 
 const bumpVersion = (version, type) => {
+  if (!version || version === 'unknown') return version;
   const [major, minor, patch] = version.split('.').map(Number);
   switch (type) {
     case 'major': return `${major + 1}.0.0`;
@@ -60,11 +61,12 @@ async function main() {
   for (const plugin of plugins) {
     try {
       const data = readJSON(plugin.path);
-      plugin.version = data.version;
+      // Fall back to marketplace version if plugin.json lacks version
+      plugin.version = data.version || plugin.marketplaceEntry.version;
       plugin.data = data;
     } catch (e) {
       console.error(`Warning: Could not read ${plugin.path}`);
-      plugin.version = 'unknown';
+      plugin.version = plugin.marketplaceEntry.version || 'unknown';
     }
   }
 
