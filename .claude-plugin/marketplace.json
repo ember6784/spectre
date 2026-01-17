@@ -1,6 +1,6 @@
 {
   "name": "subspace-agent-tools",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "owner": {
     "name": "Joe Fernandez",
     "email": "joe@subspace.build"
@@ -35,7 +35,7 @@
       "name": "sesh",
       "source": "./plugins/sesh",
       "description": "Simple cross session memory system for Claude Code. Two commands - /sesh:handoff to create a status update that get injected into the next session, and /sesh:forget to clear the memory and start fresh. We recommend you turn off auto-compact in /settings for this feature.",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "author": {
         "name": "Joe Fernandez",
         "email": "joe@subspace.build"
