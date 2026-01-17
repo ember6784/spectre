@@ -9,15 +9,15 @@ You capture durable project knowledge into Skills that Claude Code loads on-dema
 
 ## Path Convention
 
-`{{project_root}}` refers to the root of the current project (typically the git repository root or cwd). Learnings are written to `{{project_root}}/.claude/skills/apply-learnings/`.
+`{{project_root}}` refers to the root of the current project (typically the git repository root or cwd). Learnings are written to `{{project_root}}/.claude/skills/apply-knowledge/`.
 
 ## Storage Structure
 
 ```
-{{project_root}}/.claude/skills/apply-learnings/
+{{project_root}}/.claude/skills/apply-knowledge/
 ├── SKILL.md              # Router skill (bootstrapped on first learning)
 └── references/
-    ├── registry.toon     # Index of all learnings
+    ├── knowledge-registry.toon     # Index of all learnings
     ├── patterns/
     │   └── {slug}.md
     ├── gotchas/
@@ -32,7 +32,7 @@ You capture durable project knowledge into Skills that Claude Code loads on-dema
 Before proposing a learning, check for existing learnings:
 
 ```
-{{project_root}}/.claude/skills/apply-learnings/references/registry.toon
+{{project_root}}/.claude/skills/apply-knowledge/references/knowledge-registry.toon
 ```
 
 Format: `{path}|{category}|{triggers}|{description}` (one learning per line)
@@ -62,19 +62,27 @@ Must meet **at least 2 of 4**:
 
 ### 3. Categorize
 
-| Category        | What                                                    | Path                    |
-| --------------- | ------------------------------------------------------- | ----------------------- |
-| patterns        | Repeatable solutions                                    | `patterns/{slug}.md`    |
-| decisions       | Architectural choices + why                             | `decisions/{slug}.md`   |
-| gotchas         | Hard-won debugging knowledge                            | `gotchas/{slug}.md`     |
-| procedures      | Multi-step processes                                    | `procedures/{slug}.md`  |
-| domain          | Project-specific concepts                               | `domain/{slug}.md`      |
-| feature         | Feature implementations: design, flows, key files, tasks | `feature/{slug}.md`    |
-| strategy        | Roadmap decisions, prioritization rationale, feature bets | `strategy/{slug}.md`  |
-| ux              | Design patterns, user research insights, interactions   | `ux/{slug}.md`          |
-| integration     | Third-party APIs, vendor quirks, external systems       | `integration/{slug}.md` |
-| performance     | Optimization learnings, benchmarks, scaling decisions   | `performance/{slug}.md` |
-| testing         | Test strategies, coverage decisions, QA patterns        | `testing/{slug}.md`     |
+**ONLY use these categories.** Do not invent new ones.
+
+| Category        | When to use                                              | Path                    |
+| --------------- | -------------------------------------------------------- | ----------------------- |
+| feature         | How a feature works end-to-end: design, flows, key files | `feature/{slug}.md`     |
+| gotchas         | Hard-won debugging knowledge, non-obvious pitfalls       | `gotchas/{slug}.md`     |
+| patterns        | Repeatable solutions used across the codebase            | `patterns/{slug}.md`    |
+| decisions       | Architectural choices + rationale                        | `decisions/{slug}.md`   |
+| procedures      | Multi-step processes (deploy, release, etc.)             | `procedures/{slug}.md`  |
+| integration     | Third-party APIs, vendor quirks, external systems        | `integration/{slug}.md` |
+| performance     | Optimization learnings, benchmarks, scaling decisions    | `performance/{slug}.md` |
+| testing         | Test strategies, coverage decisions, QA patterns         | `testing/{slug}.md`     |
+| ux              | Design patterns, user research insights, interactions    | `ux/{slug}.md`          |
+| strategy        | Roadmap decisions, prioritization rationale              | `strategy/{slug}.md`    |
+
+**Category selection guide:**
+- "How does X feature work?" → `feature`
+- "Why did we choose X over Y?" → `decisions`
+- "X keeps breaking in weird ways" → `gotchas`
+- "How do we deploy/release/migrate X?" → `procedures`
+- "How do we talk to X API?" → `integration`
 
 **Feature category structure**: Feature learnings are higher-level "dossiers" that help the LLM understand how a feature works end-to-end. Use this structure:
 
@@ -107,26 +115,21 @@ Must meet **at least 2 of 4**:
 
 Use `feature` when capturing *how something works* holistically. Use other categories for specific insights (a gotcha within a feature, a pattern used by a feature, etc.).
 
-**Category doesn't fit?** Propose a new one. If the learning clearly doesn't belong in existing categories, suggest a new category with rationale:
-
-```
-This doesn't fit existing categories well. I'd propose a new category:
-
-**{new-category}**: {what it captures}
-
-This would cover: {examples of what else might go here}
-
-Create this category? [Y/n]
-```
-
-New categories should be general enough to hold multiple learnings, not one-offs.
-
 **Writing Effective Metadata**
 
-**Name field** (slug):
-- Letters, numbers, hyphens only (no parentheses or special chars)
-- Action-oriented gerunds aid discovery: `creating-skills` not `skill-creation`
-- Name by what you DO: `condition-based-waiting` not `async-helpers`
+**Slug naming rules (CRITICAL for discoverability):**
+
+```
+VALID:   conversation-restore, pizza-api-timeout, webhook-retry-logic
+INVALID: domain-conversation-restore, conversation-restore:, feature/restore
+```
+
+Rules:
+- **lowercase-kebab-case ONLY**: letters, numbers, hyphens
+- **NO category prefix**: the folder determines category, not the name
+- **NO special characters**: no colons, slashes, underscores, or parentheses
+- **Descriptive nouns or gerunds**: `session-restore`, `handling-timeouts`
+- **3-5 words max**: enough to be specific, short enough to scan
 
 **Description field** (frontmatter):
 - Start with "Use when..." — focus on triggering conditions
@@ -172,7 +175,7 @@ Stop and wait for user response. Format depends on action type:
 
 **For UPDATE** (revising existing learning):
 ```
-I'd update `{category}/{slug}.md`:
+I'd update the learning: `{category}/{slug}.md`
 
 **Current**: {1-2 sentence summary of existing}
 **Proposed**: {1-2 sentence summary of revision}
@@ -183,9 +186,9 @@ I'd update `{category}/{slug}.md`:
 Update this? [Y/n/edit]
 ```
 
-**For APPEND** (new learning to existing file):
+**For APPEND** (adding to existing file):
 ```
-I'd add to `{category}/{slug}.md`:
+I'd append to the learning: `{category}/{slug}.md`
 
 **{Title}**
 
@@ -201,7 +204,7 @@ Save this? [Y/n/edit]
 
 **For CREATE** (new learning file):
 ```
-I'd create `{category}/{slug}.md`:
+I'd create a new learning: `{category}/{slug}.md`
 
 **{Title}**
 
@@ -229,7 +232,7 @@ Create this? [Y/n/edit]
 
 ### 7. Write Learning
 
-**Location**: `{{project_root}}/.claude/skills/apply-learnings/references/{category}/{slug}.md`
+**Location**: `{{project_root}}/.claude/skills/apply-knowledge/references/{category}/{slug}.md`
 
 **CREATE** - New learning file:
 
@@ -272,16 +275,16 @@ Create this? [Y/n/edit]
 
 ### 8. Update Registry
 
-Add/update entry in `{{project_root}}/.claude/skills/apply-learnings/references/registry.toon`:
+Add/update entry in `{{project_root}}/.claude/skills/apply-knowledge/references/knowledge-registry.toon`:
 
 ```
 references/{category}/{slug}.md|{category}|{trigger,keywords}|{short description}
 ```
 
-The path must be relative to `.claude/skills/apply-learnings/` so the apply-learnings skill can read it directly.
+The path must be relative to `.claude/skills/apply-knowledge/` so the apply-knowledge skill can read it directly.
 
 ### 9. Confirm
 
 ```
-Saved .claude/skills/apply-learnings/references/{category}/{slug}.md
+Saved .claude/skills/apply-knowledge/references/{category}/{slug}.md
 ```

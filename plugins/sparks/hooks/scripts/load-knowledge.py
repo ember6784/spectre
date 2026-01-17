@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-load-learnings.py
+load-knowledge.py
 
-SessionStart hook that injects the apply-learnings skill and registry
+SessionStart hook that injects the apply-knowledge skill and registry
 directly into Claude's context.
 """
 
@@ -16,10 +16,10 @@ def main():
     """Main entry point for SessionStart hook."""
     project_dir = Path.cwd()
 
-    # Check if project has learnings
+    # Check if project has knowledge
     registry_path = (
-        project_dir / ".claude" / "skills" / "apply-learnings"
-        / "references" / "registry.toon"
+        project_dir / ".claude" / "skills" / "apply-knowledge"
+        / "references" / "knowledge-registry.toon"
     )
 
     if not registry_path.exists():
@@ -32,32 +32,32 @@ def main():
     if not entries:
         sys.exit(0)
 
-    # Read apply-learnings skill from plugin
+    # Read apply-knowledge skill from plugin
     plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT", "")
-    skill_path = Path(plugin_root) / "skills" / "apply-learnings" / "SKILL.md"
+    skill_path = Path(plugin_root) / "skills" / "apply-knowledge" / "SKILL.md"
 
     if skill_path.exists():
         skill_content = skill_path.read_text().strip()
     else:
-        skill_content = "Apply-learnings skill not found."
+        skill_content = "Apply-knowledge skill not found."
 
     # Build context with skill + registry injected
-    context = f"""<project-learnings>
-This project has {len(entries)} captured learnings.
+    context = f"""<project-knowledge>
+This project has {len(entries)} captured knowledge entries.
 
-## Apply-Learnings Skill
+## Apply-Knowledge Skill
 
 {skill_content}
 
-## Registry
+## Knowledge Registry
 
 {registry_content}
 
-Check triggers against current task and load relevant learnings from references/.
-</project-learnings>"""
+Check triggers against current task and load relevant knowledge from references/.
+</project-knowledge>"""
 
     # Visible notice for debugging (can remove later)
-    visible_notice = f"Learn: {len(entries)} project learnings available"
+    visible_notice = f"sparks: {len(entries)} knowledge entries available"
 
     output = {
         "systemMessage": visible_notice,

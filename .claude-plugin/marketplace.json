@@ -1,12 +1,12 @@
 {
-  "name": "subspace",
+  "name": "subspace-agent-tools",
   "version": "1.5.0",
   "owner": {
     "name": "Joe Fernandez",
     "email": "joe@subspace.build"
   },
   "metadata": {
-    "description": "SPECTRE agentic workflow plugins - Scope, Plan, Execute, Clean, Test, Release, Evaluate.",
+    "description": "Simple cross session memory, feature development, and codebase knowledge building commands & skills. Subspace agent tools are used every day by the Subspace team to build Subspace (https://www.subspace.build). Regularly updated with improvements to developer experience, speed, and quality.",
     "homepage": "https://github.com/Codename-Inc/spectre",
     "pluginRoot": "./plugins"
   },
@@ -14,7 +14,7 @@
     {
       "name": "spectre",
       "source": "./plugins/spectre",
-      "description": "SPECTRE Agentic Feature Development Workflow - Scope, Plan, Execute, Clean, Test, Release, Evaluate. Meta-prompting system where prompts invoke subagents that execute specialized prompts.",
+      "description": "Slash commands for e2e feature development. SPECTRE (Scope, Plan, Execute, Clean, Test, Release, Evaluate) is a meta-prompting system where prompts invoke subagents that execute specialized prompts. SPECTRE prompts lead from one to the next, so you never have to remember what the next prompt is to run in the system. Start with /spectre:scope.",
       "version": "1.4.0",
       "author": {
         "name": "Joe Fernandez",
@@ -24,13 +24,17 @@
         "workflow",
         "tdd",
         "planning",
-        "code-review"
+        "code-review",
+        "spec driven development",
+        "spec",
+        "prd",
+        ""
       ]
     },
     {
-      "name": "session-memory",
-      "source": "./plugins/session-memory",
-      "description": "Easy to use Session Memory for Claude Code - /handoff to generate status update, status injected automatically on next session, clear memory with /forget if needed.",
+      "name": "sesh",
+      "source": "./plugins/sesh",
+      "description": "Simple cross session memory system for Claude Code. Two commands - /sesh:handoff to create a status update that get injected into the next session, and /sesh:forget to clear the memory and start fresh. We recommend you turn off auto-compact in /settings for this feature.",
       "version": "1.2.1",
       "author": {
         "name": "Joe Fernandez",
@@ -41,24 +45,30 @@
         "memory",
         "handoff",
         "resume",
-        "context"
+        "context",
+        "sesh",
+        "status update",
+        "working memory",
+        "episodic memory"
       ]
     },
     {
-      "name": "learn",
-      "source": "./plugins/learn",
-      "description": "Build project level knowledge over time that your Agent automatically loads when relevant. Save patterns, decisions, gotchas, product strategy, and procedures from conversations, and Agent will automatically load them when relevant.",
-      "version": "2.1.0",
+      "name": "sparks",
+      "source": "./plugins/sparks",
+      "description": "Build codebase knowledge with /sparks:learn and CC will proactively recall that knowledge when relevant. Sparks (Session Persisted Recursive Knowledge System) is a Skill-based codebase knowledge building system. When you don't want to forget an important lesson, or you build a complex new feature you want to reference later, use /sparks:learn to save that knowledge to your knowledge-registry. At the start of every session, Claude Code will load any relevant learnings from the knowledge registry proactively. Ask CC to load the /sparks:apply-knowledge skill on demand to find relevant learnings. Use /learn to capture procedures, patterns, decisions, gotchas, product strategy, ux styleguides, feature documentation, and more from conversations.",
+      "version": "2.2.0",
       "author": {
         "name": "Joe Fernandez",
         "email": "joe@subspace.build"
       },
       "keywords": [
-        "learning",
         "knowledge",
+        "learning",
         "patterns",
         "decisions",
-        "documentation"
+        "memory",
+        "context",
+        "session"
       ]
     }
   ]

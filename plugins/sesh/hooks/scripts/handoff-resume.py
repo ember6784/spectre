@@ -307,7 +307,8 @@ def build_checkbox_tree(tasks: list) -> str:
 def format_context(
     data: dict,
     todos: dict | None = None,
-    history: dict | None = None
+    history: dict | None = None,
+    handoff_path: str | None = None
 ) -> dict:
     """Format handoff data into hook output structure."""
     # Extract fields with defaults
@@ -356,11 +357,32 @@ def format_context(
     todos_section = format_todos_section(todos) if todos else ""
     history_summary = format_history_summary(history) if history else ""
 
-    # User-visible notice
-    visible_notice = (
-        f"Resuming: {task_name} | Branch: {branch_name} | "
-        f"Ready to continue where we left off"
-    )
+    # User-visible notice - structured to show what Claude "knows"
+    ascii_banner = "\n".join([
+        "",
+        "                   __  ",
+        "   ________  _____/ /_ ",
+        "  / ___/ _ \\/ ___/ __ \\",
+        " (__  /  __(__  / / / /",
+        "/____/\\___/____/_/ /_/ ",
+    ])
+    notice_lines = [ascii_banner]
+    notice_lines.append(f"\n🔄 Session Resumed: {task_name} | Branch: {branch_name}")
+
+    if goal:
+        notice_lines.append(f"\n🎯 Goal: {goal}")
+
+    notice_lines.append(f"\n📝 Summary: {summary}")
+
+    if next_steps:
+        notice_lines.append("\n➡️ Next Steps:")
+        for step in next_steps:
+            notice_lines.append(f"  - {step}")
+
+    if handoff_path:
+        notice_lines.append(f"\n📁 Full details: {handoff_path}")
+
+    visible_notice = "\n".join(notice_lines)
 
     # Build the hidden context sections
     sections = []
@@ -548,8 +570,14 @@ def main():
         except Exception:
             pass  # Don't fail the hook if todo restoration fails
 
+    # Compute relative path to handoff for user reference
+    try:
+        handoff_relative = str(latest_handoff.relative_to(project_dir))
+    except ValueError:
+        handoff_relative = str(latest_handoff)
+
     # Format and output context
-    output = format_context(data, todos=todos, history=history)
+    output = format_context(data, todos=todos, history=history, handoff_path=handoff_relative)
     print(json.dumps(output))
     sys.stdout.flush()
 
