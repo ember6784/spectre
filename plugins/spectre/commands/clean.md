@@ -5,8 +5,8 @@ description: 👻 | Complete cleanup flow - clean, inspect, lint, test - primary
 # clean: Dead Code Cleanup
 
 ## Description
-- **What** — Fast pattern-based dead code detection, escalate to @analyst only for uncertain cases
-- **Outcome** — Clean code, lint clean, tests pass, conventional commits
+- **What** — Fast pattern-based dead code detection + ESLint bypass analysis with refactor planning
+- **Outcome** — Clean code, lint clean, tests pass, conventional commits, tech debt roadmap
 
 ## ARGUMENTS Input
 
@@ -37,6 +37,7 @@ $ARGUMENTS
 - [ ] Orphaned exports — not imported anywhere
 - [ ] Test artifacts — .only, skipped tests
 - [ ] AI slop — excessive comments, unnecessary checks, `any` casts
+- [ ] ESLint bypasses — `eslint-disable`, `eslint-disable-next-line`, `@ts-ignore`, `@ts-expect-error`
 
 **Categorize immediately**:
 - **SAFE_TO_REMOVE**: No refs, no dynamic usage hints, obviously dead
@@ -54,13 +55,50 @@ For each: check dynamic refs, reflection, indirect calls.
 Return: SAFE_TO_REMOVE or KEEP with evidence.
 ```
 
-## Step 3 - Execute
+## Step 3 - ESLint Compliance Planning
+
+**Purpose**: Systematically eliminate tech debt from eslint-disable comments.
+
+**3a. Collect ESLint Bypasses**:
+```bash
+grep -rn "eslint-disable\|@ts-ignore\|@ts-expect-error" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx"
+```
+
+**3b. Group by Module**: Cluster findings by directory or logical module (files that import each other).
+
+**3c. For each group with ≥2 bypasses**, dispatch @analyst in parallel:
+```
+Analyze ESLint bypasses in: {file_list}
+
+For each bypass:
+1. Identify the disabled rule(s)
+2. Understand WHY it was disabled (type issue? legacy code? third-party types?)
+3. Determine the proper fix (type narrowing, interface update, refactor, etc.)
+
+Output a refactor plan:
+- File: path
+- Line: number
+- Rule: disabled-rule-name
+- Reason: why it exists
+- Fix: specific refactor steps
+- Effort: trivial / moderate / significant
+- Risk: low / medium / high
+```
+
+**3d. Present Refactor Summary**:
+- Group by effort level (trivial fixes first)
+- Flag high-risk items for user decision
+- Create actionable items for future cleanup sprints
+
+**Note**: This step is diagnostic. Actual refactoring happens in follow-up tasks, not during clean.
+
+## Step 4 - Execute
 
 **Remove SAFE items** — No approval needed for obvious dead code.
 **Present NEEDS_REVIEW** — User decides (remove/keep).
 **Rollback** if tests fail after removal.
 
-## Step 4 - Verify & Commit
+## Step 5 - Verify & Commit
 
 - Run lint, fix violations
 - Run tests, fix failures or rollback
