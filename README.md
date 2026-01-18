@@ -75,7 +75,7 @@ This repo contains two plugins:
 | Plugin | Description |
 |--------|-------------|
 | **spectre** | Core workflow—scope, plan, execute, clean, test, rebase, evaluate |
-| **learn** | Capture project knowledge into skills via `/learn` |
+| **sparks** | Capture and retrieve project knowledge via `/learn` and `/find` |
 
 ---
 
@@ -282,10 +282,11 @@ spectre setup --skip-skill
 | `/spectre:plan_review` | Review plan for over-engineering |
 | `/spectre:continue` | Resume interrupted execution |
 
-### Learn Plugin
+### Sparks Plugin
 | Command | Description |
 |---------|-------------|
 | `/learn` | Capture knowledge from conversation into skills |
+| `/find` | Search and load project knowledge |
 
 ---
 
@@ -323,9 +324,11 @@ spectre/
 │   │   ├── skills/         # Plugin skills
 │   │   │   └── spectre/    # Workflow reference (next steps, commands)
 │   │   └── hooks/          # Session memory hooks
-│   └── learn/              # Knowledge capture plugin
+│   └── sparks/             # Knowledge capture plugin
 │       ├── plugin.json
-│       └── skills/learn/   # Learn skill
+│       ├── commands/       # /learn, /find
+│       ├── skills/         # learn, find, apply
+│       └── hooks/          # SessionStart knowledge injection
 ├── skills/
 │   └── spectre_agent_tools/  # Codex-only skill
 └── .claude-plugin/

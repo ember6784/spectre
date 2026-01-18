@@ -5,7 +5,21 @@ description: Use when user wants to search for existing knowledge, find a specif
 
 # Find Knowledge
 
-Help users discover and load relevant knowledge from the project's sparks.
+Search and load relevant knowledge from the project's sparks into your context.
+
+## How Sparks Works
+
+This project uses **sparks** to capture durable knowledge across sessions:
+
+- **Registry**: A list of knowledge entries stored inline in the apply skill
+- **References**: Markdown files containing the actual knowledge (patterns, gotchas, features, etc.)
+- **Triggers**: Keywords that indicate when knowledge is relevant
+
+The registry lives at `{{project_root}}/.claude/skills/apply/SKILL.md` under the `## Registry` section. Each entry points to a reference file in `references/{category}/{slug}.md`.
+
+**Registry format**: `{path}|{category}|{triggers}|{description}`
+
+**Categories**: feature, gotchas, patterns, decisions, procedures, integration, performance, testing, ux, strategy
 
 ## Path Convention
 
@@ -19,19 +33,9 @@ Help users discover and load relevant knowledge from the project's sparks.
 {{project_root}}/.claude/skills/apply/SKILL.md
 ```
 
-This file contains the registry of all captured knowledge entries under the `## Registry` section.
+Parse the `## Registry` section to get all knowledge entries.
 
-### 2. Parse the Registry
-
-Registry format: `{path}|{category}|{triggers}|{description}`
-
-Example entries:
-```
-references/feature/sparks-plugin.md|feature|sparks, /sparks|How sparks works
-references/gotchas/hook-timeout.md|gotchas|hook, timeout|Hook timeout pitfall
-```
-
-### 3. Search for Matches
+### 2. Search for Matches
 
 Match the user's query against:
 - **Triggers**: Keywords that indicate when knowledge is relevant
@@ -39,23 +43,31 @@ Match the user's query against:
 - **Category**: Type of knowledge (feature, gotchas, patterns, etc.)
 - **Path**: File path (slug may be descriptive)
 
-### 4. Present Results
+### 3. Handle Results
 
-**If matches found:**
+**Single match → Load automatically:**
+
+Read the file immediately:
+```
+{{project_root}}/.claude/skills/apply/{path}
+```
+
+The knowledge is now in your context. Use it to assist with the current task.
+
+**Multiple matches → Ask user which to load:**
 
 ```
 Found {N} relevant entries:
 
 1. **{category}/{slug}** - {description}
-   Triggers: {triggers}
-
 2. **{category}/{slug}** - {description}
-   Triggers: {triggers}
 
-Which would you like to load? [1/2/all/none]
+Which would you like to load? [1/2/all]
 ```
 
-**If no matches:**
+Then read the selected file(s).
+
+**No matches:**
 
 ```
 No entries match "{query}".
@@ -63,35 +75,30 @@ No entries match "{query}".
 Available categories:
 - feature ({count} entries)
 - gotchas ({count} entries)
-- patterns ({count} entries)
 ...
 
-Would you like to:
-1. Search with different keywords
-2. List all entries in a category
-3. Create new knowledge via /learn
+Would you like to search with different keywords, or create new knowledge via /learn?
 ```
 
-### 5. Load Selected Knowledge
+**No query provided (`/find` alone):**
 
-For each selected entry, read the referenced file:
+Show summary of all available knowledge by category with counts.
 
-```
-{{project_root}}/.claude/skills/apply/{path}
-```
+### 4. Apply the Knowledge
 
-Present the content to the user.
+After loading knowledge:
+
+- **If there's an active task in the conversation**: Use the knowledge as context to help complete it. The knowledge tells you WHERE to look, WHAT patterns to follow, and WHAT pitfalls to avoid.
+
+- **If this is the start of a thread (no task yet)**: Ask the user what they'd like to do with this knowledge. Example: "I've loaded the authentication feature knowledge. What would you like to know or do?"
 
 ## Examples
 
-**User**: `/find react patterns`
-**Action**: Search registry for entries with "react" or "patterns" in triggers/description
-**Result**: Show matching entries, offer to load
+**User**: `/find hooks` (mid-task)
+**Action**: Search, find 1 match, load it, use to help with current work
+
+**User**: `/find sparks` (start of thread)
+**Action**: Search, load match, then ask "I've loaded the sparks plugin knowledge. What would you like to know or do?"
 
 **User**: `/find`
-**Action**: Show summary of all available knowledge by category
-**Result**: Category breakdown with counts
-
-**User**: `/find authentication`
-**Action**: Search for auth-related entries
-**Result**: If none found, show categories and offer alternatives
+**Action**: Show category summary with counts

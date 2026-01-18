@@ -49,15 +49,14 @@ def main():
 
     # Build context with full skill content
     context = f"""<project-knowledge>
-This project has {entry_count} captured knowledge entries.
-
+⚡️ Spark Knowledge Registry has {entry_count} entries.
 {skill_content}
 
 Check triggers against current task and load relevant knowledge from references/.
 </project-knowledge>"""
 
     # Visible notice
-    visible_notice = f"sparks: {entry_count} knowledge entries available"
+    visible_notice = f"⚡️ sparks: {entry_count} knowledge entries available"
 
     output = {
         "systemMessage": visible_notice,
