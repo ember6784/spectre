@@ -29,7 +29,7 @@ DO NOT search the codebase or dispatch agents BEFORE loading relevant knowledge.
 
 ## Registry Location
 
-The registry is stored at `{{project_root}}/.claude/skills/apply/references/sparks-registry.toon`
+The registry is stored at `{{project_root}}/.claude/skills/sparks-find/references/registry.toon`
 
 **Format**: `{skill-name}|{category}|{triggers}|{description}`
 
@@ -39,7 +39,7 @@ Each entry corresponds to a skill that can be loaded via `Skill({skill-name})`
 
 ## Workflow
 
-1. **Read the registry** at `{{project_root}}/.claude/skills/apply/references/sparks-registry.toon`
+1. **Read the registry** at `{{project_root}}/.claude/skills/sparks-find/references/registry.toon`
 2. **Scan entries** — match triggers AND description against current task
 3. **For each match**, load the skill:
    ```

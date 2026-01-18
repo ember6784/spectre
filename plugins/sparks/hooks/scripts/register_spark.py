@@ -2,8 +2,12 @@
 """
 register_spark.py
 
-Appends a registry entry to the project's sparks registry.
-Called by the learn skill after writing a learning file.
+Registers a spark learning and manages the project-level find skill.
+
+Responsibilities:
+1. Create/update registry at .claude/skills/find/references/registry.toon
+2. Read find-template.md from plugin
+3. Generate .claude/skills/find/SKILL.md with embedded registry
 
 Usage:
     register_spark.py \
@@ -15,13 +19,74 @@ Usage:
 """
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
 
+def get_registry_header() -> list[str]:
+    """Return header lines for a new registry."""
+    return [
+        "# Sparks Knowledge Registry",
+        "# Format: skill-name|category|triggers|description",
+        ""
+    ]
+
+
+def update_registry(registry_path: Path, entry: str, skill_name: str) -> str:
+    """Update registry file with new/updated entry. Returns full registry content."""
+    entry_prefix = skill_name + '|'
+
+    if registry_path.exists():
+        content = registry_path.read_text()
+        lines = content.strip().split('\n') if content.strip() else []
+    else:
+        lines = get_registry_header()
+
+    # Check if entry already exists (by skill-name at start of line)
+    entry_exists = False
+    updated_lines = []
+
+    for line in lines:
+        if line.startswith(entry_prefix):
+            # Update existing entry
+            updated_lines.append(entry)
+            entry_exists = True
+        else:
+            updated_lines.append(line)
+
+    if not entry_exists:
+        updated_lines.append(entry)
+
+    # Ensure trailing newline
+    content = '\n'.join(updated_lines)
+    if not content.endswith('\n'):
+        content += '\n'
+
+    registry_path.write_text(content)
+    return content
+
+
+def generate_find_skill(find_skill_path: Path, template_path: Path, registry_content: str):
+    """Generate the find skill with embedded registry."""
+    if not template_path.exists():
+        print(f"Warning: Template not found at {template_path}", file=sys.stderr)
+        return
+
+    template = template_path.read_text()
+
+    # Replace placeholder with actual registry
+    skill_content = template.replace("{{REGISTRY}}", registry_content.strip())
+
+    # Ensure directory exists
+    find_skill_path.parent.mkdir(parents=True, exist_ok=True)
+
+    find_skill_path.write_text(skill_content)
+
+
 def main():
     parser = argparse.ArgumentParser(
-        description="Append a registry entry to the project's sparks registry"
+        description="Register a spark and update the project find skill"
     )
     parser.add_argument(
         "--project-root",
@@ -52,49 +117,28 @@ def main():
     args = parser.parse_args()
 
     project_root = Path(args.project_root)
-    registry_dir = project_root / ".claude" / "skills" / "apply" / "references"
-    registry_path = registry_dir / "sparks-registry.toon"
 
-    # Ensure the directory exists
+    # New paths: registry lives inside sparks-find skill
+    find_dir = project_root / ".claude" / "skills" / "sparks-find"
+    registry_dir = find_dir / "references"
+    registry_path = registry_dir / "registry.toon"
+    find_skill_path = find_dir / "SKILL.md"
+
+    # Template is in the plugin
+    plugin_root = Path(os.environ.get('CLAUDE_PLUGIN_ROOT', ''))
+    template_path = plugin_root / "skills" / "learn" / "references" / "find-template.md"
+
+    # Ensure directories exist
     registry_dir.mkdir(parents=True, exist_ok=True)
 
     # Build the registry entry
     entry = f"{args.skill_name}|{args.category}|{args.triggers}|{args.description}"
 
-    # Read current content or start fresh
-    if registry_path.exists():
-        content = registry_path.read_text()
-        lines = content.strip().split('\n') if content.strip() else []
-    else:
-        # Initialize with header
-        lines = [
-            "# Sparks Knowledge Registry",
-            "# Format: skill-name|category|triggers|description",
-            ""
-        ]
+    # Update registry and get full content
+    registry_content = update_registry(registry_path, entry, args.skill_name)
 
-    # Check if entry already exists (by skill-name at start of line)
-    entry_prefix = args.skill_name + '|'
-    entry_exists = False
-    updated_lines = []
-
-    for line in lines:
-        if line.startswith(entry_prefix):
-            # Update existing entry
-            updated_lines.append(entry)
-            entry_exists = True
-        else:
-            updated_lines.append(line)
-
-    if not entry_exists:
-        # Append new entry
-        updated_lines.append(entry)
-
-    # Write back
-    content = '\n'.join(updated_lines)
-    if not content.endswith('\n'):
-        content += '\n'
-    registry_path.write_text(content)
+    # Generate find skill with embedded registry
+    generate_find_skill(find_skill_path, template_path, registry_content)
 
     print(f"Registered: {entry}")
 

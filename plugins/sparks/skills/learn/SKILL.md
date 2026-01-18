@@ -17,10 +17,10 @@ Each learning becomes its own skill at the project level:
 
 ```
 {{project_root}}/.claude/skills/
-├── apply/
-│   ├── SKILL.md                      # Apply skill (compliance instructions)
+├── find/
+│   ├── SKILL.md                      # Find skill (discovery + embedded registry)
 │   └── references/
-│       └── sparks-registry.toon      # Registry of all learnings
+│       └── registry.toon             # Registry source of truth
 ├── {category}-{slug}/                # Learning = Skill
 │   └── SKILL.md
 ├── {category}-{slug}/                # Learning = Skill
@@ -30,12 +30,12 @@ Each learning becomes its own skill at the project level:
 
 ## Registry
 
-The registry is stored at `{{project_root}}/.claude/skills/apply/references/sparks-registry.toon`
+The registry is stored at `{{project_root}}/.claude/skills/sparks-find/references/registry.toon`
 
 Before proposing a learning, read the registry to check for existing learnings:
 
 ```
-{{project_root}}/.claude/skills/apply/references/sparks-registry.toon
+{{project_root}}/.claude/skills/sparks-find/references/registry.toon
 ```
 
 Format: `{skill-name}|{category}|{triggers}|{description}` (one learning per line)
@@ -274,7 +274,7 @@ python3 "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/register_spark.py" \
   --description "{description}"
 ```
 
-This adds/updates the entry in the registry at `.claude/skills/apply/references/sparks-registry.toon`.
+This updates the registry and regenerates the find skill at `.claude/skills/sparks-find/`.
 
 <CRITICAL>
 **Registry description format:**
