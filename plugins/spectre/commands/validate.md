@@ -10,6 +10,22 @@ description: 👻 | Comprehensive post implementation requirement validation usi
 - **Approach** — Primary agent chunks work by scope items or parent tasks, dispatches one @analyst per area IN PARALLEL. Each subagent validates their area including E2E UX accessibility.
 - **Outcome** — Single `validation_gaps.md` with actionable tasks ready for immediate implementation.
 
+## Core Validation Principle
+
+> **"Definition ≠ Connection ≠ Reachability"**
+
+Three levels of implementation completeness:
+1. **Defined**: Code exists in a file
+2. **Connected**: Code is imported/called by other code
+3. **Reachable**: A user action can trigger the code path
+
+Validation must verify all three levels. A feature with Level 1 but not Level 2 or 3 is NOT complete—it's dead code that happens to match the requirement description.
+
+When verifying any implementation:
+- Don't stop at "function X exists in file Y"
+- Continue to "function X is called by Z at file:line"
+- Continue to "Z is triggered when user does W"
+
 ## ARGUMENTS Input
 
 **REQUIRED**: User must provide scope documents to validate against.
@@ -79,34 +95,70 @@ description: 👻 | Comprehensive post implementation requirement validation usi
   ## Your Task
   1. Investigate YOUR SPECIFIC AREA only
   2. For each requirement, determine:
-     - **Status**: ✅ Delivered | ⚠️ Partial | ❌ Missing | 🔍 Unclear
-     - **Evidence**: Specific files, functions, line numbers
+     - **Status**: ✅ Delivered | ⚠️ Partial | 🔌 Dead Code | ❌ Missing
+       - ✅ **Delivered**: Defined AND connected AND reachable from user action
+       - ⚠️ **Partial**: Code exists but has broken/missing connections
+       - 🔌 **Dead Code**: Code exists but has zero usage sites
+       - ❌ **Missing**: Code does not exist
+     - **Evidence**: Must include BOTH:
+       1. Definition site: `file:line` where code is defined
+       2. Usage site: `file:line` where code is called/rendered
+       - If you can only cite definition without usage → status is ⚠️ or 🔌
      - **Gap**: What's missing (if any)
-  
-  3. **CRITICAL - E2E UX Validation**:
-     - Is this feature accessible from the UI? (menu, button, route, etc.)
-     - Can a user actually reach this functionality?
-     - Is it hooked up end-to-end, or is the code orphaned/unreachable?
-     - Check: routes, navigation, component imports, event handlers
-  
+
+  3. **CRITICAL - Reachability Verification**:
+     - Trace the COMPLETE chain from user action to implementation:
+       - Entry point: What user action triggers this? (click, route, event)
+       - Call chain: How does execution flow to the implementation?
+       - Terminal point: What side effect/UI change occurs?
+     - A broken link at ANY point = ⚠️ NOT FULLY DELIVERED
+     - For every function/component, grep for USAGE not just DEFINITION:
+       - Functions: Search for `functionName(` to find invocations
+       - Components: Search for `<ComponentName` to find render sites
+       - Hooks: Search for `useHookName(` to find consumers
+       - Props: Search for `propName={` to find where passed
+     - Zero usage sites = 🔌 Dead Code
+
   4. Check for scope creep: anything beyond the requirement
   
   ## Output Format
   ```
 
-  AREA: {area_name} STATUS: {overall: Delivered | Partial | Missing}
+  AREA: {area_name} STATUS: {overall: Delivered | Partial | Dead Code | Missing}
 
   REQUIREMENTS:
 
-  - \[REQ-1\] {requirement} Status: {status} Evidence: {file:line} Gap: {what's missing} UX Accessible: {Yes/No - how user reaches it}
+  - \[REQ-1\] {requirement}
+    Status: {✅|⚠️|🔌|❌}
+    Definition: {file:line where defined}
+    Usage: {file:line where called/rendered, or "NONE FOUND"}
+    Reachability: {user action → ... → this code, or "NOT REACHABLE"}
+    Gap: {what's missing}
 
   SCOPE CREEP: {any features beyond scope}
 
   SUMMARY: {1-2 sentences}
 
   ```plaintext
-  
+
   ```
+
+**Verification Patterns for Subagents**:
+
+| Checking | Search Pattern | Meaning |
+|----------|---------------|---------|
+| Function called | `functionName\(` | Invocation exists |
+| Component renders | `<ComponentName` | JSX usage exists |
+| Hook consumed | `useHookName\(` | Hook is used |
+| Prop passed | `propName={` | Parent passes prop |
+| Export imported | `import.*Name` | Module consumed |
+
+**Common broken link patterns to check**:
+- Callback defined but never passed as prop
+- Prop received but never used in component body
+- Function exported but never imported elsewhere
+- Type defined but never used in signatures
+- Switch case exists but condition never triggers
 
 - **Wait** — All validation agents complete
 
@@ -171,11 +223,12 @@ description: 👻 | Comprehensive post implementation requirement validation usi
     - Recommendation: {action}
   
   ## Validation Coverage
-  | Area | Status | Evidence | UX Accessible |
-  |------|--------|----------|---------------|
-  | {area 1} | ✅ | {files} | Yes - {how} |
-  | {area 2} | ⚠️ | {files} | No - needs hookup |
-  | {area 3} | ❌ | — | — |
+  | Area | Status | Definition | Usage | Reachable |
+  |------|--------|------------|-------|-----------|
+  | {area 1} | ✅ | {file:line} | {file:line} | Yes - {user action} |
+  | {area 2} | ⚠️ | {file:line} | {file:line} | No - broken at {link} |
+  | {area 3} | 🔌 | {file:line} | NONE | No - dead code |
+  | {area 4} | ❌ | — | — | — |
   ```
 
 ## Step (4/4) - Present Results
