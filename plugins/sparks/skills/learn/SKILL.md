@@ -84,10 +84,123 @@ Example: `feature-sparks-plugin|feature|sparks, /learn, /find|Use when modifying
 
 ### 1. Parse Input
 
-**With arguments**: Use the explicit content as the knowledge to capture.
+**With arguments**: Use the explicit topic/content as the knowledge to capture.
 **Without arguments**: Analyze recent conversation (last 10-20 messages) to identify what's worth preserving.
 
-### 2. Apply Capture Criteria
+### 2. Check Context
+
+Determine if you have sufficient context to create a quality learning.
+
+**Ask yourself**: Can I answer the category's required questions (from Section 6) using:
+- The current conversation context?
+- My existing knowledge of this codebase from this session?
+
+| Situation | Action |
+|-----------|--------|
+| Topic was discussed in detail in recent messages | Proceed to Step 4 (Apply Capture Criteria) |
+| You already understand the topic from this session | Proceed to Step 4 (Apply Capture Criteria) |
+| Topic is unfamiliar / not discussed / you'd be guessing | **Trigger Investigation Mode** (Step 2b) |
+
+<CRITICAL>
+Do NOT fabricate knowledge. If you haven't seen how something works in this session, you don't know how it works. Investigation Mode exists precisely for this situation.
+</CRITICAL>
+
+### 2b. Investigation Mode
+
+When you lack context, investigate the codebase using subagents before creating a learning.
+
+#### Step 1: Determine Category
+
+Classify the topic into a likely category. If ambiguous, ask the user:
+```
+I'll investigate "{topic}" in the codebase. Which type of learning?
+- feature (how it works end-to-end)
+- gotchas (debugging knowledge)
+- patterns (repeatable solutions)
+- decisions (architectural choices)
+- procedures (multi-step processes)
+- integration (external systems)
+```
+
+#### Step 2: File Discovery
+
+Dispatch an `Explore` agent to map relevant files:
+
+```
+Task(subagent_type="Explore", prompt="""
+Find all files related to "{topic}" in this codebase:
+- Entry points (routes, CLI commands, exports, event handlers)
+- Core logic (main implementation files)
+- Tests (unit tests, integration tests)
+- Config (configuration, environment, constants)
+- Docs (READMEs, comments, existing documentation)
+
+Return a file map with:
+- File path
+- Brief description of what the file does
+- Relevance to {topic} (high/medium/low)
+
+Focus on HIGH and MEDIUM relevance files.
+""")
+```
+
+#### Step 3: Parallel Investigation
+
+Based on the category, dispatch 2-3 `general-purpose` agents in parallel. Each agent gets:
+- The file map from Step 2
+- 1-2 specific questions to answer
+- Instructions to cite specific files and line numbers
+
+**For feature investigations:**
+```
+Agent 1: "What is {topic} and what problem does it solve? How do users interact with it?
+         Cite entry points and user-facing code."
+
+Agent 2: "What is the technical architecture? How do components connect?
+         Cite core implementation files."
+
+Agent 3: "What are common tasks someone would need to do? What files would they modify?
+         Cite specific functions/files for each task."
+```
+
+**For gotcha investigations:**
+```
+Agent 1: "What are the symptoms when {topic} goes wrong? What errors appear?
+         Cite error handling code and logs."
+
+Agent 2: "What is the root cause? What non-obvious behavior exists?
+         Cite the specific code that causes confusion."
+
+Agent 3: "What is the solution? How do you fix or work around it?
+         Cite the correct approach with code examples."
+```
+
+**For other categories:** Generate investigation questions from the category's required sections.
+
+#### Step 4: Synthesize Findings
+
+After subagents return:
+
+1. **Cross-reference** - Connect insights across agents. Look for:
+   - Files mentioned by multiple agents (likely important)
+   - Flows that span multiple components
+   - Patterns that repeat
+
+2. **Resolve conflicts** - If agents contradict each other:
+   - Read the disputed code directly to verify
+   - Note uncertainty in the learning if unresolved
+
+3. **Identify gaps** - What required sections couldn't be answered?
+   - If critical gaps exist, dispatch additional investigation
+   - If minor gaps, note them as "needs investigation" in the learning
+
+4. **Structure findings** - Map synthesized knowledge to the category template from Section 6
+
+After synthesis, proceed to Step 7 (Generate Skill Name).
+
+---
+
+### 4. Apply Capture Criteria
 
 Must meet **at least 2 of 4**:
 
@@ -101,7 +214,7 @@ Must meet **at least 2 of 4**:
 **Capture**: Patterns, decisions with rationale, debugging insights, conventions, tribal knowledge.
 **Skip**: One-off solutions, generic knowledge, temporary workarounds, simple preferences (-> CLAUDE.md).
 
-### 3. Categorize
+### 5. Categorize
 
 **ONLY use these categories.** Do not invent new ones.
 
@@ -125,7 +238,7 @@ Must meet **at least 2 of 4**:
 - "How do we deploy/release/migrate X?" → `procedures`
 - "How do we talk to X API?" → `integration`
 
-### 4. Category-Specific Structure
+### 6. Category-Specific Structure
 
 Each category has expected sections. These are minimums - add more depth as needed to meet the Content Principles.
 
@@ -200,7 +313,7 @@ Follow the Content Principles. Include:
 - Examples (code, commands, or concrete scenarios)
 - Pitfalls (what to watch out for)
 
-### 5. Generate Skill Name
+### 7. Generate Skill Name
 
 The skill name follows the pattern `{category}-{slug}`:
 
@@ -218,7 +331,7 @@ Rules:
 - **Descriptive slug**: `session-restore`, `handling-timeouts`
 - **3-5 words max in slug**: enough to be specific, short enough to scan
 
-### 6. Match, Update, or Create
+### 8. Match, Update, or Create
 
 Read the registry to find candidates, then **read the actual skill file** to compare content.
 
@@ -244,7 +357,45 @@ Read the registry to find candidates, then **read the actual skill file** to com
 
 **Decision priority**: UPDATE > APPEND > CREATE (prefer consolidation over proliferation)
 
-### 7. Propose
+### 9. Verify Learning
+
+Before proposing, verify the learning is accurate. This is especially important for Investigation Mode learnings.
+
+**Verification checklist:**
+
+1. **Spot-check key claims** (2-3 minimum)
+   - Pick specific claims from your draft ("File X handles Y")
+   - Read the actual file to confirm
+   - If wrong, correct the learning
+
+2. **Verify file purposes**
+   - For each file in "Key Files", quick-read to confirm description
+   - Remove files that don't match their described purpose
+
+3. **Trace one flow** (for feature learnings)
+   - Pick a user flow from the learning
+   - Trace through actual code to confirm accuracy
+   - Note any discrepancies
+
+**If verification fails:**
+- Correct the learning before proposing
+- If uncertainty remains, flag it explicitly:
+  ```
+  > **Note**: The {specific area} couldn't be fully verified.
+  > This may need confirmation.
+  ```
+
+**Confidence calibration based on verification:**
+
+| Verification Result | Confidence |
+|---------------------|------------|
+| All claims verified, flows traced | high |
+| Most verified, minor gaps | medium |
+| Significant uncertainty, partial verification | low |
+
+For Investigation Mode learnings, default to `medium` unless verification is thorough.
+
+### 10. Propose
 
 Stop and wait for user response. Format depends on action type:
 
@@ -289,23 +440,23 @@ Confidence: {low|medium|high}
 Create this? [Y/n/edit]
 ```
 
-**Confidence**:
-- low = observed once
-- medium = repeated or taught
-- high = battle-tested
+**Confidence** (determined in Step 9 - Verify Learning):
+- low = observed once, or Investigation Mode with partial verification
+- medium = repeated/taught, or Investigation Mode with solid verification
+- high = battle-tested, or fully verified with traced flows
 
 <CRITICAL>
 Always show FULL proposed content, not summaries. The user needs to see exactly what will be saved to approve it. Sparse proposals lead to sparse learnings.
 </CRITICAL>
 
-### 8. Handle Response
+### 11. Handle Response
 
 - `y`/`yes` -> write as proposed
 - `n`/`no` -> cancel
 - `edit` or custom text -> modify first
 - Different skill name -> use that instead
 
-### 9. Write Learning
+### 12. Write Learning
 
 **Location**: `{{project_root}}/.claude/skills/{skill-name}/SKILL.md`
 
@@ -326,7 +477,7 @@ user-invocable: false
 **Updated**: {YYYY-MM-DD}
 **Version**: 1
 
-{Content - follows category-specific structure from Section 4}
+{Content - follows category-specific structure from Section 6}
 ```
 
 **UPDATE** - Revise existing skill:
@@ -352,7 +503,7 @@ user-invocable: false
 {Explanation}
 ```
 
-### 10. Register the Learning
+### 13. Register the Learning
 
 After writing the skill file, register it by calling the register script:
 
@@ -387,7 +538,7 @@ The `--description` parameter is used to MATCH knowledge to tasks. It must descr
 - `"API patterns"` (no actionable context)
 </CRITICAL>
 
-### 11. Confirm
+### 14. Confirm
 
 ```
 Saved .claude/skills/{skill-name}/SKILL.md
