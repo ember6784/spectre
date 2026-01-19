@@ -5,7 +5,7 @@ load-knowledge.py
 SessionStart hook that injects compliance instructions and registry
 directly into Claude's context.
 
-Reads from project-level registry at .claude/skills/find/references/registry.toon
+Reads from project-level registry at .claude/skills/sparks-find/references/registry.toon
 No plugin dependency - purely reads from project.
 """
 
@@ -46,20 +46,28 @@ def main():
     context = f"""<sparks-knowledge>
 This project has {entry_count} captured knowledge skills.
 
-COMPLIANCE: Before searching codebase or dispatching agents, check if any
-registered knowledge matches your current task. Load matching skills first
-using: Skill({{skill-name}})
+<CRITICAL>
+BEFORE searching the codebase or dispatching agents, you MUST:
+1. Scan the registry below for entries whose triggers or description match your current task
+2. If ANY match, load the skill FIRST using: Skill({{skill-name}})
+3. THEN proceed with your task using the loaded knowledge
+
+DO NOT skip this step. The knowledge skills tell you WHERE to look and make you faster and more accurate.
+Loading relevant knowledge first prevents wasted searches and repeated mistakes.
+</CRITICAL>
 
 ## Registry
+
+Format: skill-name|category|triggers|description
 
 {registry_content}
 
 ## How to Load
 
-To load a skill: Read `.claude/skills/{{skill-name}}/SKILL.md`
+To load a skill: `Skill({{skill-name}})`
 
-Example: If registry has `feature-auth-flows|feature|auth, JWT|Use when implementing auth`
-Then read: `.claude/skills/feature-auth-flows/SKILL.md`
+Example: Registry has `feature-auth-flows|feature|auth, login, JWT|Use when implementing auth`
+Action: `Skill(feature-auth-flows)` - then use the loaded knowledge to guide your work.
 </sparks-knowledge>"""
 
     # Visible notice

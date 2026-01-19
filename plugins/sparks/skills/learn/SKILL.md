@@ -1,6 +1,6 @@
 ---
 name: learn
-description: Use when user invokes /learn or wants to save patterns, decisions, gotchas, procedures, or feature knowledge from a conversation.
+description: Use when user invokes /learn or wants to save patterns, decisions, gotchas, procedures, or feature knowledge from a conversation for later re-use. Look for user requests like "please remember" or "what did we learn from this?".
 ---
 
 # Learning Agent
