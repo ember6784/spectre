@@ -6,7 +6,7 @@ SessionStart hook that injects the apply skill content with embedded registry
 directly into Claude's context.
 
 Reads:
-- Apply skill from plugin: skills/apply/SKILL.md
+- Apply skill from plugin: skills/sparks-apply/SKILL.md
 - Registry from project: .claude/skills/sparks-find/references/registry.toon
 
 Combines them by replacing the Registry Location section with actual registry content.
@@ -44,7 +44,7 @@ def main():
 
     # Paths
     registry_path = project_dir / ".claude" / "skills" / "sparks-find" / "references" / "registry.toon"
-    apply_skill_path = plugin_root / "skills" / "apply" / "SKILL.md"
+    apply_skill_path = plugin_root / "skills" / "sparks-apply" / "SKILL.md"
 
     if not registry_path.exists():
         sys.exit(0)

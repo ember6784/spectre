@@ -1,5 +1,5 @@
 ---
-name: apply
+name: sparks-apply
 description: Use when starting implementation, debugging, or feature work on a project with captured knowledge.
 user-invocable: false
 ---
