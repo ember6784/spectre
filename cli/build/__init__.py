@@ -6,7 +6,7 @@ The CLI handles the loop; Claude handles task tracking and progress writing.
 """
 
 from .loop import run_build_loop, ALLOWED_TOOLS, DENIED_TOOLS
-from .prompt import build_prompt, PROMPT_TEMPLATE
+from .prompt import build_prompt
 from .stats import BuildStats
 from .stream import format_tool_call, process_stream_event
 
@@ -20,7 +20,6 @@ __all__ = [
     "process_stream_event",
     "ALLOWED_TOOLS",
     "DENIED_TOOLS",
-    "PROMPT_TEMPLATE",
 ]
 
 
