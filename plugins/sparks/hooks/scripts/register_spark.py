@@ -126,7 +126,7 @@ def main():
 
     # Template is in the plugin
     plugin_root = Path(os.environ.get('CLAUDE_PLUGIN_ROOT', ''))
-    template_path = plugin_root / "skills" / "learn" / "references" / "find-template.md"
+    template_path = plugin_root / "skills" / "sparks-learn" / "references" / "find-template.md"
 
     # Ensure directories exist
     registry_dir.mkdir(parents=True, exist_ok=True)

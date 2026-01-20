@@ -24,7 +24,7 @@ If ANY entry's triggers or description match your current task, you MUST load th
 
 The registry tells you exactly where relevant knowledge is. Loading it first makes you faster and more accurate.
 
-DO NOT search the codebase or dispatch agents BEFORE loading relevant knowledge. The knowledge skills tell you WHERE to search and make you more token-efficient.
+DO NOT search the codebase or dispatch agents BEFORE loading relevant knowledge—even if you think you already have enough context. Partial context from Read results or error messages is not a substitute for the complete picture in the skill.
 </CRITICAL>
 
 ## Registry Location
@@ -57,6 +57,21 @@ Each entry corresponds to a skill that can be loaded via `Skill({skill-name})`
 | "I'll dispatch an agent to find this" | The skill name is in the registry. Just use `Skill({name})`. |
 | "I need more context first" | The knowledge IS the context. |
 | "This seems simple" | Simple tasks benefit from captured patterns too. |
+| "I already have context from a Read/system message" | Partial context is dangerous. The skill has the full picture—including related changes you don't know about yet. |
+| "The error/issue is narrow and specific" | Narrow symptoms often stem from broader changes (like namespace renames) that the skill documents. |
+| "I can figure this out faster by just searching" | You're trading 1 skill load for multiple speculative searches. The skill tells you exactly where to look. |
+
+## Real Failure Example
+
+**Task**: Fix "Template not found at skills/learn/references/find-template.md"
+
+**Rationalization**: "I already have register_spark.py in context from a Read result. The error points to the exact path. This is a simple path mismatch—I'll just Glob to find where the template actually is."
+
+**What happened**: Skipped loading `feature-sparks-plugin` skill. Used Glob to find the file. Fixed it.
+
+**What the skill would have provided**: Immediate knowledge that skills were renamed to `sparks-*` namespace, exact file paths in the "Key Files" table, no searching required.
+
+**Cost**: Extra tool calls, wasted tokens, and reinforced bad habits.
 
 ## Example
 
