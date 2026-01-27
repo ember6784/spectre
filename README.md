@@ -8,7 +8,8 @@ A simple, powerful, and **proven** structured development workflow plugin for Cl
 
 - Great Inputs -&gt; Great Outputs
 - Ambiguity is Death
-- One Workflow, Every Feature, Any Size
+- One Workflow, Every Feature, Any Size, Any Codebase
+- Agent Agnostic (aspirational, right now this is Claude Code coupled)
 
 ## Why SPECTRE?
 
@@ -80,15 +81,15 @@ You can use *any* of the commands in any sequence you want - they are good stand
 
 SPECTRE can maintain and accumulates context across sessions when you use the /spectre:handoff command. To get the most from Spectre's Session Memory, we recommend that you:
 
-1) turn off auto-compact in Claude Code /config settings, and 
+1. turn off auto-compact in Claude Code /config settings, and
 
-2) run /spectre:handoff liberally when you are switching gears or the context window is getting north of 160k tokens.
+2. run /spectre:handoff liberally when you are switching gears or the context window is getting north of 160k tokens.
 
 ### How It Works
 
 When you run /spectre:handoff, a status report will get generated for that session, and automatically loaded into your context window for the next session. You’ll see a nice summary of the status when you run /clear.
 
-If you already had previous sessions, a subagent (spectre:sync) will review the last 3 status updates and merge into a single continuous session memory. 
+If you already had previous sessions, a subagent (spectre:sync) will review the last 3 status updates and merge into a single continuous session memory.
 
 Voila -- trailing 3 session memory snapshots.
 
