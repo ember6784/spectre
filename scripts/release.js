@@ -9,9 +9,9 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 
-// Marketplace at repo root, plugin in integrations/claude-code/
+// Both files at repo root level
 const MARKETPLACE_PATH = join(ROOT, '.claude-plugin/marketplace.json');
-const PLUGIN_PATH = join(ROOT, 'integrations/claude-code/plugin.json');
+const PLUGIN_PATH = join(ROOT, 'plugin.json');
 
 const rl = createInterface({
   input: process.stdin,
@@ -92,7 +92,7 @@ async function main() {
   // Update plugin.json
   plugin.version = newVersion;
   writeJSON(PLUGIN_PATH, plugin);
-  console.log(`  ✓ integrations/claude-code/plugin.json → ${newVersion}`);
+  console.log(`  ✓ plugin.json → ${newVersion}`);
 
   // Update marketplace.json (both top-level version and plugin entry version)
   marketplace.version = newVersion;

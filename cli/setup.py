@@ -26,8 +26,8 @@ def get_repo_root() -> Path:
 
 
 def get_plugins_dir() -> Path:
-    """Get the plugins directory in the repo (integrations/claude-code)."""
-    return get_repo_root() / "integrations" / "claude-code"
+    """Get the plugin directory (repo root, where plugin.json lives)."""
+    return get_repo_root()
 
 
 def get_skills_dir() -> Path:

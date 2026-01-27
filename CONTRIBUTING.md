@@ -24,7 +24,7 @@ Open an issue describing:
 1. Fork the repo
 2. Create a feature branch (`git checkout -b feature/my-feature`)
 3. Make your changes
-4. Test with Claude Code (`claude --plugin-dir integrations/claude-code`)
+4. Test with Claude Code (`claude --plugin-dir /path/to/spectre`)
 5. Commit with clear messages
 6. Push and open a PR
 
@@ -39,29 +39,32 @@ cd spectre
 
 Test the plugin locally:
 ```bash
-claude --plugin-dir integrations/claude-code
+claude --plugin-dir /path/to/spectre
 ```
 
 ### Structure
 
 ```
 spectre/
-├── core/                    # Agent-agnostic prompts (edit here)
-├── integrations/claude-code # CC-specific wiring
-├── cli/                     # Python CLI
-└── docs/                    # Documentation
+├── plugin.json       # Plugin manifest
+├── commands/         # Slash commands
+├── agents/           # Subagent definitions
+├── hooks/            # Session memory hooks
+├── skills/           # Skills
+├── cli/              # Python CLI for other agents
+└── .claude-plugin/   # Marketplace registration
 ```
 
 ### Adding Commands
 
-1. Create a markdown file in `core/commands/` or `core/workflows/`
+1. Create a markdown file in `commands/`
 2. Follow existing command patterns
 3. Test with Claude Code
 4. Update docs if needed
 
 ### Adding Agents
 
-1. Create a markdown file in `core/agents/`
+1. Create a markdown file in `agents/`
 2. Define name, description, and methodology
 3. Test subagent dispatch
 

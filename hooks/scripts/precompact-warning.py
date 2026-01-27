@@ -15,7 +15,7 @@ def main():
     output = {
         "systemMessage": (
             "⚠️ Auto-compact can cause context loss. "
-            "For full continuity: /sesh:handoff → /clear → new session. "
+            "For full continuity: /spectre:handoff → /clear → new session. "
             "Consider disabling auto-compact in /config."
         )
     }

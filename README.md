@@ -2,7 +2,7 @@
 
 **S**cope → **P**lan → **E**xecute → **C**lean → **T**est → **R**ebase → **E**valuate
 
-A structured workflow framework for AI coding agents. Works with Claude Code today, with support for other agents via CLI.
+A structured workflow plugin for Claude Code. Provides consistent, reviewable AI-assisted development.
 
 ## Why SPECTRE?
 
@@ -15,7 +15,7 @@ AI coding agents are powerful but inconsistent. SPECTRE provides:
 
 ## Quick Start
 
-### Claude Code (Recommended)
+### Claude Code
 
 ```bash
 # Add marketplace and install
@@ -100,15 +100,6 @@ SPECTRE dispatches specialized subagents for different tasks:
 | `@spectre:tester` | Test automation |
 | `@spectre:reviewer` | Independent code review |
 
-## Full Autonomous Mode
-
-For well-scoped work, run the entire workflow:
-```
-/spectre:spectre "Add dark mode toggle"
-```
-
-Interactive scope, then hands-off execution through all phases.
-
 ## Slash Command Reference
 
 ### Core Workflow
@@ -122,11 +113,10 @@ Interactive scope, then hands-off execution through all phases.
 | `/spectre:rebase` | Safe rebase with conflict handling |
 | `/spectre:evaluate` | Documentation and architecture review |
 
-### Orchestrators
+### Quick Start
 | Command | Description |
 |---------|-------------|
-| `/spectre:spectre` | Full autonomous workflow after interactive scope |
-| `/spectre:quick_dev` | Scope + plan with manual execution |
+| `/spectre:quick_dev` | Scope + plan for small/medium tasks |
 
 ### Discovery & Research
 | Command | Description |
@@ -151,30 +141,18 @@ Interactive scope, then hands-off execution through all phases.
 | `/spectre:tdd` | Test-driven development execution |
 | `/spectre:architecture_review` | Principal architect assessment |
 
-## Architecture
+## Repository Structure
 
 ```
 spectre/
-├── core/                    # Agent-agnostic prompts
-│   ├── workflows/           # 7 SPECTRE phase commands
-│   ├── commands/            # Supporting commands
-│   ├── agents/              # Subagent definitions
-│   └── session/             # Session memory
-├── integrations/
-│   └── claude-code/         # Claude Code plugin
-└── cli/                     # Python CLI for other agents
+├── plugin.json       # Plugin manifest
+├── commands/         # Slash commands
+├── agents/           # Subagent definitions
+├── hooks/            # Session memory hooks
+├── skills/           # Skills
+├── cli/              # Python CLI for other agents
+└── .claude-plugin/   # Marketplace registration
 ```
-
-## Documentation
-
-- [Getting Started](docs/getting-started.md)
-- [Workflow Guide](docs/workflow-guide.md)
-- [Command Reference](docs/command-reference.md)
-- [Extending SPECTRE](docs/extending-spectre.md)
-
-## Related
-
-- [spectre-labs](https://github.com/Codename-Inc/spectre-labs) — Experimental features (build loop, sparks knowledge capture)
 
 ## License
 

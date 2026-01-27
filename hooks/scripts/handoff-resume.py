@@ -360,11 +360,9 @@ def format_context(
     # User-visible notice - structured to show what Claude "knows"
     ascii_banner = "\n".join([
         "",
-        "                   __  ",
-        "   ________  _____/ /_ ",
-        "  / ___/ _ \\/ ___/ __ \\",
-        " (__  /  __(__  / / / /",
-        "/____/\\___/____/_/ /_/ ",
+        "░█▀▀░█▀█░█▀▀░█▀▀░▀█▀░█▀▄░█▀▀",
+        "░▀▀█░█▀▀░█▀▀░█░░░░█░░█▀▄░█▀▀",
+        "░▀▀▀░▀░░░▀▀▀░▀▀▀░░▀░░▀░▀░▀▀▀",
     ])
     notice_lines = [ascii_banner]
     notice_lines.append(f"\n🔄 Session Resumed: {task_name} | Branch: {branch_name}")
@@ -382,7 +380,7 @@ def format_context(
     if handoff_path:
         notice_lines.append(f"\n📁 Full details: {handoff_path}")
 
-    notice_lines.append("\n💡 Run /sesh:forget to clear session memory and start fresh.")
+    notice_lines.append("\n💡 Run /spectre:forget to clear session memory and start fresh.")
 
     visible_notice = "\n".join(notice_lines)
 
