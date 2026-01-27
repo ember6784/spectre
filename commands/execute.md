@@ -31,7 +31,7 @@ $ARGUMENTS
   2. **Dispatch Wave**: Launch parallel @dev subagents (1 per task batch)
      - **CRITICAL**: Each subagent MUST read `SCOPE_DOCS` before executing
      - Each receives: task batch assignment, dependency completion reports, SCOPE_DOCS paths
-     - Instruct: "Read scope docs first to understand E2E UX and integration points. Execute tasks sequentially via `/spectre:tdd`. **Commit after each parent task** with conventional commit format (e.g., `feat(module): add X`, `fix(module): resolve Y`). Return completion report with **Implementation Insights** + **E2E Completeness Check**."
+     - Instruct: "Read scope docs first to understand E2E UX and integration points. Load @skill-spectre:tdd, then execute tasks sequentially using its TDD methodology. **Commit after each parent task** with conventional commit format (e.g., `feat(module): add X`, `fix(module): resolve Y`). Return completion report with **Implementation Insights** + **E2E Completeness Check**."
 
      **E2E Completeness Check** (subagent returns one per batch):
      - ⚪ Complete — tasks sufficient to deliver spec intent

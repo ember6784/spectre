@@ -1,16 +1,11 @@
 ---
-description: 👻 | Execute tasks via strict TDD methodology - primary agent
+name: tdd
+description: "Load this skill when executing TDD (Test-Driven Development) methodology. Use when /spectre:tdd is invoked, when implementing features via strict RED-GREEN-REFACTOR cycles, or when a prompt instructs execution via TDD."
 ---
 
-# tdd: Test-Driven Development Execution
+# TDD: Test-Driven Development Methodology
 
 Execute tasks using strict TDD (RED → GREEN → REFACTOR). Outcome: Tasks completed with Happy/Failure tests passing, minimal code shipped.
-
-## ARGUMENTS
-
-<ARGUMENTS>
-$ARGUMENTS
-</ARGUMENTS>
 
 ## Iron Law
 
@@ -26,6 +21,8 @@ Wrote code before the test? **Delete it. Start over.** Don't keep it as "referen
 - **Scoped execution**: Never run repo-wide tests; use `--testPathPattern`, `--findRelatedTests`, or per-file lint
 - **YAGNI**: No abstractions unless test forces it or ≥2 call sites exist
 - **Anti-flake**: Use fake timers, stubs, seeded RNG
+
+---
 
 ## Step 1 - Generate TDD TODO List
 
@@ -79,6 +76,8 @@ Wrote code before the test? **Delete it. Start over.** Don't keep it as "referen
   - **API Surface**: New/modified exports with signatures
   - **Patterns**: Code/testing patterns to follow
   - **Deferred**: Coverage gaps for follow-up
+
+---
 
 ## Red Flags — STOP and Restart
 

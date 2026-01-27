@@ -155,9 +155,10 @@ Development and verification.
   - Purpose: Adaptive wave-based execution dispatching parallel @dev subagents, with reflection after each wave and code review loop until no critical issues remain.
   - When to use: When tasks.md exists and you want coordinated multi-agent parallel execution.
 
-- **/spectre:tdd**
+- **/spectre:tdd** (loads `tdd` skill)
   - Purpose: Strict test-driven development execution—write failing tests first, then minimal implementation, then refactor.
   - When to use: When implementing features that benefit from TDD methodology.
+  - Note: The command loads the `tdd` skill which contains the full TDD methodology.
 
 - **/spectre:code_review**
   - Purpose: Comprehensive code analysis covering functionality, quality, security, and production readiness with severity-based findings.
