@@ -21,28 +21,45 @@ Collaborative workflow for structuring unstructured thoughts into clear scope bo
 
 **SKIP IF FROM_KICKOFF=true**
 
-- **Action** — ExploreScope: Collaborative dialogue focused on boundaries.
+- **Action** — ExploreScope: Collaborative dialogue focused on boundaries and user experience.
 
   **CRITICAL**: Focus on WHAT, not HOW. Defer all technical/implementation questions until scope boundaries are finalized. Only ask technical questions if the scope itself is inherently technical (e.g., "migrate database from X to Y").
 
-  **Pattern**: Always propose concrete suggestions. "Based on \[context\], I'm thinking \[specific\]. Is that right?"
+  **PATTERN**: Lead with a rich initial exploration. In your FIRST response, propose concrete hypotheses AND ask 5-8 questions across multiple dimensions. Give the user a full landscape to react to, not a single thread to follow.
 
-  **Topics** (priority order - complete each before moving on):
+  **FIRST RESPONSE FORMAT**:
 
-  1. **User Problem & Value**: Formulate hypothesis. "The core problem seems to be \[Y\]. Is that right?"
-  2. **Scope Boundaries**: This is the core work. Propose both IN and OUT lists. "I'd suggest IN: ✅ \[list\] and OUT: ❌ \[list\]. What would you move?"
-  3. **UX Assumptions:** Identify the primary user flows. Is anything ambiguous? “How do you imagine X working? I could see the user flow being 1)… 2)…."
-  4. **Edge Cases**: Identify ambiguous items. "I'm unsure about \[X\] - should that be IN or OUT?"
-  5. **Success Outcomes**: Present 2-4 criteria tied to IN items only.
+  > Here's my initial read on this, plus questions to help us explore the bounds:
+  >
+  > **My hypothesis**: [problem statement, who it affects, proposed IN/OUT]
+  >
+  > **Questions to explore**:
+  > 1. [User problem question]
+  > 2. [UX flow question]
+  > 3. [Boundary edge question]
+  > 4. [Alternative approach question]
+  > 5. [Success criteria question]
+  > 6. [Edge case question]
+  > ...
+  >
+  > Answer any/all that spark thoughts. Skip what's obvious.
 
-  **DO NOT ask about**: implementation approach, technical trade-offs, architecture, or integration details until boundaries are confirmed. 
+  **Question types to include** (aim for 5-8 total, mix from these):
 
+  - **User & Problem**: Who feels this most? What triggers the need? What's the cost of not solving it?
+  - **UX & Feel**: Should this feel fast or thorough? Guided or flexible? What's the ideal flow?
+  - **Boundaries**: What about [adjacent thing]—IN or OUT? If unlimited time, what else? What's essential for v1?
+  - **Alternatives**: I could see this as [A] or [B]. Which direction?
+  - **Edge cases**: What happens when [unusual situation]? Should we handle [error state]?
+  - **Success**: What makes you say "this shipped well"? What's the one thing we can't get wrong?
 
-- **Action** — IterateBoundaries: Continue refining IN/OUT until user confirms.
+  **DO NOT ask about**: implementation approach, technical trade-offs, architecture, or integration details until boundaries are confirmed.
+
+- **Action** — IterateBoundaries: After user responds, refine boundaries and ask targeted follow-ups on gaps.
 
   > **Current Boundaries**: ✅ **IN**: \[list\] ❌ **OUT**: \[list\] ⚠️ **Unsure**: \[edge cases\]
   >
-  > Any items to move? Add exclusions? Clarify edges? Reply ‘looks good' to continue.
+  > Any items to move? Add exclusions? Clarify edges? Reply 'looks good' to continue.
 
 - **Wait** — User confirms Scope boundaries are accurate
 
@@ -97,18 +114,18 @@ Collaborative workflow for structuring unstructured thoughts into clear scope bo
 
 - **Action** — UpdateScopeDoc: Add findings to Integration & Constraints sections if relevant.
 
-## Step 7: Final Review & Complete
+## Step 7: Complete & Tee Up Next Steps
 
-- **Action** — PromptFinalReview:
+- **Action** — PresentFinalScope: Show final scope summary and assumptively present next steps.
 
   > **Scope Complete**: `{OUT_DIR}/concepts/scope.md`
   >
-  > Includes: Problem & value, scope boundaries, UX journeys, success criteria, decisions, integration points.
+  > **Final Boundaries**: ✅ **IN**: [from doc] ❌ **OUT**: [from doc]
   >
-  > Review and reply 'Approved' or provide feedback.
-
-- **Wait** — User approves
-
-- **Action** — ConfirmCompletion: "Scope complete. Docs: `{OUT_DIR}/concepts/scope.md`, `{OUT_DIR}/clarifications/scope_clarifications_{timestamp}.md`"
+  > Docs saved: `{OUT_DIR}/concepts/scope.md`, `{OUT_DIR}/clarifications/scope_clarifications_{timestamp}.md`
+  >
+  > Let me know if anything needs adjusting, otherwise here's what's next:
 
 - **Action** — RenderFooter: Render Next Steps using `@skill-spectre:spectre-next-steps` skill.
+
+  > **NOTE**: Do NOT wait for explicit approval. Present next steps immediately. User can interrupt with corrections if needed.

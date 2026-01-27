@@ -83,13 +83,9 @@ Use research findings from Step 1 to determine appropriate planning depth.
   - **STANDARD**: Mix of Low/Med signals, multi-file but contained scope, no hard-stops
   - **COMPREHENSIVE**: Any High signal, multiple Med signals, or any hard-stop triggered
 
-- **Action** — ConfirmTier:
+- **Action** — LogTier: Note the assessed tier in your response for transparency, then proceed immediately to Step 4. Do NOT ask for confirmation.
 
-  > "Based on research: \[brief summary of key findings\]. Assessed as **{TIER}**. Proceed or adjust?"
-
-- **Wait** — User confirms or overrides tier
-
-> **CHECKPOINT**: After tier confirmation, proceed IMMEDIATELY to Step 4. The ONLY valid next action is invoking a Skill. Do NOT end turn here.
+> **CHECKPOINT**: After determining tier, proceed IMMEDIATELY to Step 4. The ONLY valid next action is invoking a Skill. Do NOT end turn here. Do NOT ask user to confirm the tier.
 
 ## Step 4 - Route to Workflow
 
