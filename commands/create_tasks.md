@@ -127,6 +127,22 @@ Read completely (no limits):
 
 **Numbering**: Phase 1 → Parent 1.1, 1.2 → Sub-tasks 1.1.1, 1.1.2 → Criteria ✓
 
+### Integration-Aware Task Principle
+
+> **"A feature isn't done when pieces exist. It's done when data flows from user action to rendered pixels."**
+
+Every task that creates something must specify:
+1. **What it produces** — exact output (variable, return value, prop, event)
+2. **What consumes it** — exact consumer (component, hook, handler) that uses the output
+3. **What it replaces** — old code path being deprecated (if any)
+
+Tasks without consumers are incomplete. Tasks that don't address old code paths leave dead/duplicate logic.
+
+**Task Types**:
+- **Build tasks**: Create a component/hook/utility/function
+- **Integration tasks**: Wire producer output to consumer input (MANDATORY for every build task)
+- **Cleanup tasks**: Remove/redirect old code paths (MANDATORY when replacing patterns)
+
 ### 4b. Create Parent Tasks
 - **Action** — CreateParentTasks: Draft as many phases as needed to logically organize work, each with as many parent tasks (📋) as required to cover complete scope.
   - Each parent task = single cohesive deliverable (small-medium scope)
@@ -151,6 +167,9 @@ Read completely (no limits):
     - ✅ Integration points (which components connect, API contracts)
     - ✅ File/component names (UserProfileComponent, authMiddleware.ts)
     - ✅ Technical constraints (max file size, timeout duration, data format)
+    - ✅ **Produces**: What output this creates (variable name, return value, prop)
+    - ✅ **Consumed by**: What uses this output (component, hook, render path)
+    - ✅ **Replaces**: What old code path this supersedes (if any)
 
   - **What to AVOID in sub-tasks:**
     - ❌ Code snippets or pseudo-code
@@ -183,6 +202,19 @@ Read completely (no limits):
     - [ ] Parent tasks are small-medium scope, sub-tasks are atomic?
     - [ ] Each sub-task has 2-3 acceptance criteria?
     - [ ] Acceptance criteria verifiable (not implementation steps)?
+
+- **Action** — ValidateIntegration: Verify every build task is wired to consumers.
+  - **Consumer Specified**:
+    - [ ] Does every "create X" task specify what consumes X?
+    - [ ] No orphaned computations (values produced but never used)?
+  - **Integration Explicit**:
+    - [ ] Is there a task for wiring producer output → consumer input?
+    - [ ] For UI features: is there a task verifying data reaches the render path?
+  - **Old Paths Addressed**:
+    - [ ] If replacing old code, is removal/redirect a task?
+    - [ ] No duplicate data sources for the same concern?
+  - **Last Mile Covered**:
+    - [ ] For every feature affecting what users SEE: task exists to wire to JSX render?
 
 ---
 
@@ -278,18 +310,26 @@ Save to `${TASKS_FILE}`:
 
 #### [1.1] {Parent Task Title}
 - [ ] **1.1.1** {Sub-task with technical specifics}
+  - **Produces**: {output variable/value/prop}
+  - **Consumed by**: {component/hook that uses this}
+  - **Replaces**: {old code path, or "N/A" if new}
   - [ ] {Technical outcome 1}
   - [ ] {Technical outcome 2}
   - [ ] {Technical outcome 3}
 
 - [ ] **1.1.2** {Sub-task with technical specifics}
+  - **Produces**: {output variable/value/prop}
+  - **Consumed by**: {component/hook that uses this}
   - [ ] {Technical outcome 1}
   - [ ] {Technical outcome 2}
 
-#### [1.2] {Parent Task Title}
-- [ ] **1.2.1** {Sub-task with technical specifics}
-  - [ ] {Technical outcome 1}
-  - [ ] {Technical outcome 2}
+#### [1.2] {Parent Task Title} — Integration
+*This task wires outputs from 1.1 to consumers*
+- [ ] **1.2.1** {Wire X to Y}
+  - **Wires**: {1.1.1 output} → {consumer component/render}
+  - **Removes**: {old code path being replaced}
+  - [ ] {Consumer uses new data source}
+  - [ ] {Old data source removed/redirected}
 
 ### Phase 2: {Phase Name}
 ...

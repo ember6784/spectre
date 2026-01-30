@@ -119,7 +119,42 @@ When verifying any implementation:
        - Props: Search for `propName={` to find where passed
      - Zero usage sites = 🔌 Dead Code
 
-  4. Check for scope creep: anything beyond the requirement
+  4. **CRITICAL - Consumer-First Validation (Render-Backward Trace)**:
+     For UI features, start from the FINAL RENDER and trace BACKWARDS:
+     - What component renders the feature output? (exact JSX location)
+     - What variable does that JSX use? (exact variable name)
+     - Where does that variable come from? (hook, prop, computed value)
+     - Trace back to the user action. Is every link connected?
+
+     Example (filter feature):
+     - Renders: `BoardColumn` receives `tasks` prop at line 45
+     - Variable: `tasks` comes from `getFilteredTasksForBoard(board.id)`
+     - Source: `getFilteredTasksForBoard` uses... `getTasksForBoard` from drag hook
+     - ❌ BROKEN: This bypasses `displayTasks` from filter hook!
+
+     If you can only trace forward (definition → usage) but NOT backward
+     (render → source), you haven't verified the last mile.
+
+  5. **CRITICAL - Dead Computation Detection**:
+     List every computed value that is NOT directly consumed by a render:
+     - For each hook return value, grep for where it's destructured/used
+     - For each computed const, grep for where it's referenced
+     - A value that's computed but never reaches JSX = 🔌 Dead Code
+
+     Example:
+     - `displayTasks` from `useKanbanFilters` → used where?
+       - Passed to `TasksHeroHeader` ✓
+       - Used in `getFilteredTasksForBoard`? ❌ NO — uses different source
+     - Computed but not in render chain = BUG
+
+  6. **Old Code Path Audit**:
+     When new functionality replaces old patterns:
+     - What OLD code handled this before? (imports, hooks, functions)
+     - Is the old code still being called anywhere?
+     - Are there duplicate data sources for the same concern?
+     - If old path still active → ⚠️ Partial (new code bypassed)
+
+  7. Check for scope creep: anything beyond the requirement
   
   ## Output Format
   ```
@@ -133,7 +168,16 @@ When verifying any implementation:
     Definition: {file:line where defined}
     Usage: {file:line where called/rendered, or "NONE FOUND"}
     Reachability: {user action → ... → this code, or "NOT REACHABLE"}
+    Render Chain: {JSX ← variable ← source ← user action, or "BROKEN AT {link}"}
     Gap: {what's missing}
+
+  DEAD COMPUTATIONS:
+  - {variable name} in {file}: computed but not consumed by render
+  - ...
+
+  OLD CODE PATHS:
+  - {old function/hook}: still active at {file:line}, bypasses new implementation
+  - ...
 
   SCOPE CREEP: {any features beyond scope}
 
@@ -159,6 +203,16 @@ When verifying any implementation:
 - Function exported but never imported elsewhere
 - Type defined but never used in signatures
 - Switch case exists but condition never triggers
+- **Hook returns value that's destructured but never used in JSX**
+- **New data source created but old source still used in render**
+- **Computed value stored in variable but render uses different variable**
+- **Filter/transform function created but rendering bypasses it**
+
+**Last-Mile Anti-Patterns** (these cause "works in code, broken in UI"):
+- `displayTasks` computed but `getTasksForBoard` called in render
+- Handler created but onClick still points to old handler
+- New hook created but component still imports old hook
+- State updated correctly but wrong variable passed to child component
 
 - **Wait** — All validation agents complete
 
@@ -169,6 +223,18 @@ When verifying any implementation:
   - Aggregate status across all areas
   - Compile gaps by priority (Critical/Medium/Low)
   - Note any scope creep findings
+
+- **Action** — FinalWiringChecklist: Before marking any area complete, verify:
+
+  | Check | Question |
+  |-------|----------|
+  | Consumer connected? | Does every new function/hook have a consumer that uses its output? |
+  | Render chain complete? | Can you trace from JSX ← variable ← hook ← user action without breaks? |
+  | Old paths removed? | If replacing old code, is the old path dead or redirected? |
+  | No orphaned computation? | Is every computed value actually used in a render path? |
+  | No duplicate sources? | Is there only ONE data source for each concern (not old + new)? |
+
+  **CRITICAL**: If any check fails for an area marked ✅, downgrade to ⚠️ and add gap task.
 
 - **Action** — DetermineOutputDir:
 
@@ -223,12 +289,22 @@ When verifying any implementation:
     - Recommendation: {action}
   
   ## Validation Coverage
-  | Area | Status | Definition | Usage | Reachable |
-  |------|--------|------------|-------|-----------|
-  | {area 1} | ✅ | {file:line} | {file:line} | Yes - {user action} |
-  | {area 2} | ⚠️ | {file:line} | {file:line} | No - broken at {link} |
-  | {area 3} | 🔌 | {file:line} | NONE | No - dead code |
+  | Area | Status | Definition | Usage | Render Chain |
+  |------|--------|------------|-------|--------------|
+  | {area 1} | ✅ | {file:line} | {file:line} | JSX ← var ← source ✓ |
+  | {area 2} | ⚠️ | {file:line} | {file:line} | Broken at {link} |
+  | {area 3} | 🔌 | {file:line} | NONE | Dead computation |
   | {area 4} | ❌ | — | — | — |
+
+  ## Dead Computations Found
+  | Variable | File | Computed By | Should Be Consumed By |
+  |----------|------|-------------|----------------------|
+  | {displayTasks} | {useKanbanFilters.ts} | {applyTaskFilters} | {KanbanBoard render} |
+
+  ## Old Code Paths Still Active
+  | Old Path | Location | Should Be Replaced By | Impact |
+  |----------|----------|----------------------|--------|
+  | {getTasksForBoard} | {useKanbanDrag:45} | {displayTasks from useKanbanFilters} | Bypasses new filter |
   ```
 
 ## Step (4/4) - Present Results
