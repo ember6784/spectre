@@ -9,9 +9,8 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 
-// Both files at repo root level
 const MARKETPLACE_PATH = join(ROOT, '.claude-plugin/marketplace.json');
-const PLUGIN_PATH = join(ROOT, 'plugin.json');
+const PLUGIN_PATH = join(ROOT, 'plugins/spectre/.claude-plugin/plugin.json');
 
 const rl = createInterface({
   input: process.stdin,

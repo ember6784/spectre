@@ -10,19 +10,25 @@ SPECTRE is a Claude Code plugin providing a structured agentic workflow: **S**co
 
 ```
 spectre/
-├── plugin.json           # Plugin manifest
-├── commands/             # Slash commands (markdown prompts)
-├── agents/               # Subagent definitions
-├── hooks/                # SessionStart, PreCompact, UserPromptSubmit
-├── skills/               # Skills (spectre footer rendering, tdd methodology)
-└── .claude-plugin/       # Marketplace registration
+├── .claude-plugin/
+│   └── marketplace.json  # Marketplace registration
+├── plugins/
+│   └── spectre/
+│       ├── .claude-plugin/
+│       │   └── plugin.json   # Plugin manifest
+│       ├── commands/         # Slash commands (markdown prompts)
+│       ├── agents/           # Subagent definitions
+│       ├── hooks/            # SessionStart, PreCompact, UserPromptSubmit
+│       └── skills/           # Skills (spectre footer rendering, tdd methodology)
+├── scripts/              # Release & utility scripts
+└── CLAUDE.md
 ```
 
 ## Commands
 
 ```bash
 # Run hook tests
-pytest hooks/scripts/ -v
+pytest plugins/spectre/hooks/scripts/ -v
 ```
 
 > **CLI for Other Agents**: See [spectre-labs/cli](https://github.com/Codename-Inc/spectre-labs/tree/main/cli)
@@ -51,7 +57,7 @@ Commands are markdown prompts that:
 
 ### Session Memory
 
-Hooks in `hooks/` maintain context across sessions:
+Hooks in `plugins/spectre/hooks/` maintain context across sessions:
 - **SessionStart**: Restores previous session context
 - **UserPromptSubmit**: Captures todos on `/spectre:handoff`
 - **PreCompact**: Warns before compacting
@@ -62,7 +68,7 @@ Session state is stored in `.spectre/` (gitignored).
 
 ### Adding Commands
 
-1. Create markdown in `commands/`
+1. Create markdown in `plugins/spectre/commands/`
 2. Follow existing patterns:
    - ARGUMENTS section for input parsing
    - EXECUTION FLOW for step-by-step logic
@@ -70,7 +76,7 @@ Session state is stored in `.spectre/` (gitignored).
 
 ### Adding Agents
 
-1. Create markdown in `agents/`
+1. Create markdown in `plugins/spectre/agents/`
 2. Include:
    - Role and mission sections
    - Methodology for how the agent works
@@ -78,7 +84,7 @@ Session state is stored in `.spectre/` (gitignored).
 
 ### Modifying Hooks
 
-Update Python scripts in `hooks/scripts/`. Hooks must:
+Update Python scripts in `plugins/spectre/hooks/scripts/`. Hooks must:
 - Use `os.fork()` for non-blocking execution
 - Use only Python 3 standard library
 - Return valid JSON to stdout
@@ -107,7 +113,7 @@ Claude Code caches plugins by version. There's no hot-reload — **always restar
 ### Local Development
 
 ```bash
-claude --plugin-dir /path/to/spectre
+claude --plugin-dir /path/to/spectre/plugins/spectre
 ```
 
 Workflow:
@@ -127,8 +133,8 @@ Workflow:
 
 ### Releasing to Users
 
-1. **Bump version in TWO files**:
-   - `plugin.json`
+1. **Bump version in TWO files** (or use `npm run release`):
+   - `plugins/spectre/.claude-plugin/plugin.json`
    - `.claude-plugin/marketplace.json`
 2. **Commit and push** to GitHub
 3. **Tag the release** (optional but recommended)
