@@ -170,20 +170,22 @@ When verifying any implementation:
     Reachability: {user action → ... → this code, or "NOT REACHABLE"}
     Render Chain: {JSX ← variable ← source ← user action, or "BROKEN AT {link}"}
     Gap: {what's missing}
+    Remediation: {specific fix — what to wire, what to replace, what to add}
+      - Produces: {what the fix outputs}
+      - Consumed by: {what should use it}
+      - Replaces: {old path to remove, or "N/A"}
 
   DEAD COMPUTATIONS:
   - {variable name} in {file}: computed but not consumed by render
-  - ...
+    - Remediation: {wire to X, or delete if unnecessary}
 
   OLD CODE PATHS:
   - {old function/hook}: still active at {file:line}, bypasses new implementation
-  - ...
+    - Remediation: {replace calls with new path, or remove}
 
   SCOPE CREEP: {any features beyond scope}
 
   SUMMARY: {1-2 sentences}
-
-  ```plaintext
 
   ```
 
@@ -250,44 +252,56 @@ When verifying any implementation:
   ```markdown
   # Validation Gaps: {task_name}
   *Generated: {timestamp}*
-  
+
   ## Summary
   - **Overall Status**: {Complete | Needs Work | Significant Gaps}
   - **Requirements**: {X of Y} delivered
   - **Gaps Found**: {count} requiring remediation
   - **Scope Creep**: {count} items (document or remove)
-  
+
+  ---
+
   ## Gap Remediation Tasks
-  
-  ### Phase 1: Critical Gaps
-  
-  #### [1.1] {Gap Title - e.g., "Connect auth flow to login page"}
+
+  ### 📦 Phase 1: Critical Gaps
+
+  #### 📋 [1.1] {Gap Title - e.g., "Connect auth flow to login page"}
   **Requirement**: {original requirement text}
-  **Current State**: {what exists now}
-  **Gap**: {what's missing}
-  
-  - [ ] **1.1.1** {Specific action - e.g., "Add login route to app router"}
-    - [ ] {Acceptance criterion 1}
-    - [ ] {Acceptance criterion 2}
-  - [ ] **1.1.2** {Specific action - e.g., "Wire LoginButton onClick to auth handler"}
-    - [ ] {Acceptance criterion 1}
-    - [ ] {Acceptance criterion 2}
-  
-  #### [1.2] {Next Gap Title}
+  **Current State**: {what exists now — definition site if code exists}
+  **Gap**: {what's missing — broken link in the chain}
+
+  - [ ] **1.1.1** {Specific action - e.g., "Wire LoginButton onClick to auth handler"}
+    - **Produces**: {output this creates — e.g., "onClick handler calling authService.login()"}
+    - **Consumed by**: {what uses this — e.g., "LoginButton component render"}
+    - **Replaces**: {old code path — e.g., "inline console.log in onClick" or "N/A"}
+    - [ ] {Verifiable outcome 1}
+    - [ ] {Verifiable outcome 2}
+
+  - [ ] **1.1.2** {Specific action - e.g., "Add login route to app router"}
+    - **Produces**: {output — e.g., "/login route rendering LoginPage"}
+    - **Consumed by**: {consumer — e.g., "App router, navigated via authService redirect"}
+    - [ ] {Verifiable outcome 1}
+    - [ ] {Verifiable outcome 2}
+
+  #### 📋 [1.2] {Next Gap Title}
+  ...
+
+  ### 📦 Phase 2: Medium Priority Gaps
+  ...
+
+  ### 📦 Phase 3: Low Priority / Polish
   ...
   
-  ### Phase 2: Medium Priority Gaps
-  ...
-  
-  ### Phase 3: Low Priority / Polish
-  ...
-  
+  ---
+
   ## Scope Creep Review
   Items implemented beyond original scope:
   - [ ] **{Feature}**: {Keep and document | Remove | Discuss}
     - Evidence: {file:line}
     - Recommendation: {action}
-  
+
+  ---
+
   ## Validation Coverage
   | Area | Status | Definition | Usage | Render Chain |
   |------|--------|------------|-------|--------------|
@@ -305,6 +319,7 @@ When verifying any implementation:
   | Old Path | Location | Should Be Replaced By | Impact |
   |----------|----------|----------------------|--------|
   | {getTasksForBoard} | {useKanbanDrag:45} | {displayTasks from useKanbanFilters} | Bypasses new filter |
+
   ```
 
 ## Step (4/4) - Present Results
