@@ -525,7 +525,7 @@ user-invocable: false
 After writing the skill file, register it by calling the register script:
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/register_spark.py" \
+python3 "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/register_learning.py" \
   --project-root "{{project_root}}" \
   --skill-name "{skill-name}" \
   --category "{category}" \

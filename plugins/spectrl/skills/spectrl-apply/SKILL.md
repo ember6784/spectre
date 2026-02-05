@@ -100,7 +100,7 @@ When you finish a task that touched areas covered by loaded skills, **the skills
 
 **Task**: Fix "Template not found at skills/learn/references/find-template.md"
 
-**Rationalization**: "I already have register_spark.py in context from a Read result. The error points to the exact path. This is a simple path mismatch—I'll just Glob to find where the template actually is."
+**Rationalization**: "I already have register_learning.py in context from a Read result. The error points to the exact path. This is a simple path mismatch—I'll just Glob to find where the template actually is."
 
 **What happened**: Skipped loading `feature-spectrl-plugin` skill. Used Glob to find the file. Fixed it.
 

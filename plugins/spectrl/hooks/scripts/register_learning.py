@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-register_spark.py
+register_learning.py
 
-Registers a spark learning and manages the project-level find skill.
+Registers a spectrl learning and manages the project-level find skill.
 
 Responsibilities:
-1. Create/update registry at .claude/skills/find/references/registry.toon
+1. Create/update registry at .claude/skills/spectrl-find/references/registry.toon
 2. Read find-template.md from plugin
-3. Generate .claude/skills/find/SKILL.md with embedded registry
+3. Generate .claude/skills/spectrl-find/SKILL.md with embedded registry
 
 Usage:
-    register_spark.py \
+    register_learning.py \
         --project-root "/path/to/project" \
         --skill-name "feature-my-feature" \
         --category "feature" \
@@ -86,7 +86,7 @@ def generate_find_skill(find_skill_path: Path, template_path: Path, registry_con
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Register a spark and update the project find skill"
+        description="Register a learning and update the project find skill"
     )
     parser.add_argument(
         "--project-root",

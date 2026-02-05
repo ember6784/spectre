@@ -42,12 +42,17 @@ def main():
     project_dir = Path.cwd()
     plugin_root = Path(os.environ.get('CLAUDE_PLUGIN_ROOT', ''))
 
-    # Paths
+    # Paths - check new name first, fall back to old "sparks" name for migration
     registry_path = project_dir / ".claude" / "skills" / "spectrl-find" / "references" / "registry.toon"
+    old_registry_path = project_dir / ".claude" / "skills" / "sparks-find" / "references" / "registry.toon"
     apply_skill_path = plugin_root / "skills" / "spectrl-apply" / "SKILL.md"
 
+    # Support old "sparks-find" path for projects that haven't migrated
     if not registry_path.exists():
-        sys.exit(0)
+        if old_registry_path.exists():
+            registry_path = old_registry_path
+        else:
+            sys.exit(0)
 
     if not apply_skill_path.exists():
         sys.exit(0)
