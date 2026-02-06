@@ -1,6 +1,7 @@
 # Project-specific
 docs/
 grove-logs/
+scripts/
 
 # Node.js
 node_modules/
