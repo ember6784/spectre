@@ -4,7 +4,7 @@
 
 **Get higher quality results from your coding agent, while working autonomously for much longer, so you can make 10-100x your typical output look easy.**
 
-![SPECTRE hero](./docs/images/spectre-hero.png)
+![SPECTRE hero](./assets/images/spectre-hero.png)
 
 ## Quick Start
 
@@ -24,7 +24,7 @@ Then start building:
 
 That's it. You just start with 1 command to build features.
 
-![SPECTRE scope command](./docs/images/spectre-scope.png)
+![SPECTRE scope command](./assets/images/spectre-scope.png)
 
 ## Core SPECTRE Principles
 
