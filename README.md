@@ -2,7 +2,7 @@
 
 **S**cope → **P**lan → **E**xecute → **C**lean → **T**est → **R**ebase → **E**xtract
 
-**Get higher quality results from your coding agent, while working autonomously for much longer, so you can make 10-100x your typical output look easy.**
+**Get higher quality results from your coding agent, while they working autonomously for much longer, so 10-100x'ing your typical output feels easy.**
 
 ![SPECTRE hero](./assets/images/spectre-hero.png)
 
