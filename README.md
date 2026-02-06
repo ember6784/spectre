@@ -32,7 +32,7 @@ That's it. You just start with 1 command to build features.
 - Ambiguity is Death
 - One Workflow, Every Feature, Any Size, Any Codebase
 
-## 💀 SPECTRE Purpose
+## 👻 SPECTRE Purpose
 
 AI coding is changing product development, but why is it that Claude Code can still go off the rails? Why is it that some developers claim AI has 100x'd their output, while others still complain about the quality of the code it generates?
 
@@ -42,11 +42,11 @@ Let me introduce you to a very simple concept that you need to drill into your h
 
 When the scope, ux, and plan are ambiguous, you must rely on the LLM to fill in the blanks. And while sometimes you can get lucky - especially for smaller features - for any *real* technology or product work, ambiguity is how you end up with spaghetti code, conflicts, and AI slop.
 
-LLMs need specificity. And typically, providing the right level of specificity is HARD.
+LLMs need specificity. And typically, providing the right level of specificity is a lot of work. Just think about the most detailed spec or technical design you’ve ever written. Takes days and sometimes weeks.
 
 BUT --- you can use LLMs to make it EASY to provide that specificity. And that is exactly what SPECTRE does.
 
-### Workflows = Easy Button
+### ✅ Workflows = Easy Button
 
 Prompt based workflows are how you get the best, highest quality, and most consistent results from AI Coding Agents.
 
@@ -56,7 +56,7 @@ The better your prompt based workflows, the lower the ambiguity, the more AI can
 
 The path to 100x output is through **structured workflows**.
 
-### So.... Waterfall?
+### 💧 So.... Waterfall?
 
 No its not. Its an entirely new way to build products.
 
@@ -96,7 +96,7 @@ I created SPECTRE because I wanted:
 
 - ***stupid. simple. memory.*** agent sessions are aware of the ongoing thread of work (/spectre:handoff)
 
-### My Iteration Process
+### My Workflow Iteration Process
 
 I improve these prompts daily, and I didn't just prompt Claude Code to generate these prompts. I iterated over many months, adjusting the prompts based on both the user experience of using them, and the quality of results that I got.
 
