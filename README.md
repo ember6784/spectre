@@ -6,7 +6,7 @@
 
 ![SPECTRE hero](./assets/images/spectre-hero.png)
 
-## Quick Start
+## ⚡ Quick Start
 
 ### Within Claude Code
 
@@ -19,20 +19,20 @@
 Then start building:
 
 ```plaintext
-/spectre:scope 
+/spectre:scope
 ```
 
 That's it. You just start with 1 command to build features.
 
 ![SPECTRE scope command](./assets/images/spectre-scope.png)
 
-## Core SPECTRE Principles
+## 🎯 Core SPECTRE Principles
 
 - Great Inputs -&gt; Great Outputs
 - Ambiguity is Death
 - One Workflow, Every Feature, Any Size, Any Codebase
 
-## SPECTRE Purpose
+## 💀 SPECTRE Purpose
 
 AI coding is changing product development, but why is it that Claude Code can still go off the rails? Why is it that some developers claim AI has 100x'd their output, while others still complain about the quality of the code it generates?
 
@@ -56,7 +56,7 @@ The better your prompt based workflows, the lower the ambiguity, the more AI can
 
 The path to 100x output is through **structured workflows**.
 
-### So.... Waterfall?  
+### So.... Waterfall?
 
 No its not. Its an entirely new way to build products.
 
@@ -68,7 +68,7 @@ THEN -- you can iterate on the feature set, ux, architecture, etc. at lightning 
 
 From there, you can iterate and adapt before you ship.
 
-## Background & Philosophy
+## 📖 Background & Philosophy
 
 ## About
 
@@ -78,7 +78,7 @@ These are the *actual* prompts I use and iterate upon non stop every day to buil
 
 With SPECTRE, I built a React Native based AI Agent + GPS Rangefinder for Golfers (New June (in closed Alpha)) and a 250k line Tauri/Rust/React desktop application called Subspace (in open Beta - https://www.subspace.build).
 
-## Why
+## 💡 Why
 
 I created SPECTRE because I wanted:
 
@@ -110,7 +110,7 @@ For example:
 
 SPECTRE made products like New June and Subspace possible, and it is making it possible for me, an ex-Meta, ex-Amazon Technical Product Manager to build, ship, and iterate on products 100x the complexity of anything I've ever built in the past.
 
-## The SPECTRE Workflow
+## 🔄 The SPECTRE Workflow
 
 If you start with /scope, your agent will guide you through the rest of the steps automatically.
 
@@ -124,11 +124,11 @@ If you start with /scope, your agent will guide you through the rest of the step
 | **R**ebase | `/spectre:rebase` | Safe merge preparation with conflict handling |
 | **E**xtract | `/spectre:extract` | Capture knowledge for future sessions |
 
-Each command ends with "Next Steps" suggestions, so you always know what prompt to run next — you don’t have to remember what the prompts are, which is one thing that kills me about many other Spec Driven Development workflows.
+Each command ends with "Next Steps" suggestions, so you always know what prompt to run next — you don't have to remember what the prompts are, which is one thing that kills me about many other Spec Driven Development workflows.
 
 You can use *any* of the commands in any sequence you want - they are good standalone too. More on my typical daily usage below.
 
-## SPECTRE Session Memory
+## 🧠 SPECTRE Session Memory
 
 SPECTRE maintains and accumulates context across sessions when you use the /spectre:handoff command. To get the most from SPECTRE's Session Memory, we recommend that you:
 
@@ -138,7 +138,7 @@ SPECTRE maintains and accumulates context across sessions when you use the /spec
 
 ### How It Works
 
-When you run /spectre:handoff, a status report will get generated for that session, and automatically loaded into your context window for the next session. You’ll see a nice summary of the status when you run /clear.
+When you run /spectre:handoff, a status report will get generated for that session, and automatically loaded into your context window for the next session. You'll see a nice summary of the status when you run /clear.
 
 If you already had previous sessions, a subagent (@spectre:sync) will review the last 3 status updates and merge into a single continuous session memory.
 
@@ -151,7 +151,7 @@ If you want to start fresh — /spectre:forget archives the session_logs.
 /spectre:forget    # Clear memory for fresh start
 ```
 
-## SPECTRE Extract
+## 🧬 SPECTRE Extract
 
 The more I used SPECTRE and the faster I could build, the more frequently I found myself wanting to reference past work. Whether that was a hard-won debugging session, a new architectural pattern, or just documenting a feature and how it worked.
 
@@ -178,7 +178,7 @@ Run `/spectre:extract` after any session where you learned something worth keepi
 
 ### The Hook + Skill Loop
 
-What is great about SPECTRE Extract, is that Claude Code automatically loads skills that are relevant. We do this with a 'coercion' technique I borrowed from Jesse Vincent’s great Superpowers skill.
+What is great about SPECTRE Extract, is that Claude Code automatically loads skills that are relevant. We do this with a 'coercion' technique I borrowed from Jesse Vincent's great Superpowers skill.
 
 1. **SessionStart hook** — every time you start a conversation, SPECTRE's hook reads your project's knowledge registry and injects it into context. Claude now *knows what it knows* before you type a single word.
 
@@ -186,11 +186,11 @@ What is great about SPECTRE Extract, is that Claude Code automatically loads ski
 
 The result: knowledge compounds across sessions instead of resetting to zero. The more you extract, the faster and more accurate every future session becomes.
 
-## Subagents
+## 🤖 Subagents
 
 SPECTRE dispatches specialized subagents for different tasks:
 
-NOTE: You don’t even need to know that these subagents exist. The prompts instruct Claude Code to call them automatically.
+NOTE: You don't even need to know that these subagents exist. The prompts instruct Claude Code to call them automatically.
 
 Although I do sometimes use @spectre:web-research for web research. It's like mini deep-research.
 
@@ -204,15 +204,15 @@ Although I do sometimes use @spectre:web-research for web research. It's like mi
 | `@spectre:tester` | Test automation |
 | `@spectre:reviewer` | Independent code review |
 
-## How I Typically use SPECTRE
+## 🛠️ How I Typically use SPECTRE
 
 99.9% of my day is spent using SPECTRE exactly like this.
 
-- start /spectre:scope to get crisp on what’s in/out. this is non-negotiable unless the feature is a one line ask.
+- start /spectre:scope to get crisp on what's in/out. this is non-negotiable unless the feature is a one line ask.
 
 - /spectre:plan to build out a well researched technical design or set of tasks
 
-  - once i have scope/plan/tasks, I typically run /spectre:handoff to get a fresh context window with awareness of what we’re working on.
+  - once i have scope/plan/tasks, I typically run /spectre:handoff to get a fresh context window with awareness of what we're working on.
 
 - then run /spectre:execute to use parallel subagents to work through the tasks. Execute is a meta prompt that also calls /spectre:code_review and /spectre:validate.
 
@@ -226,7 +226,7 @@ Although I do sometimes use @spectre:web-research for web research. It's like mi
 
   - If there is a bug that can't easily be solved, i use the /spectre:fix prompt for a more structured debugging approach.
 
-  - If something new comes up, or if the scope is not what I’d hoped, I run a new /scope cycle from within the project.
+  - If something new comes up, or if the scope is not what I'd hoped, I run a new /scope cycle from within the project.
 
   - I liberally use /spectre:handoff here to keep context windows clean as I work through issues, and keep the sessions on track with the progress we're making.
 
@@ -245,7 +245,7 @@ Although I do sometimes use @spectre:web-research for web research. It's like mi
 
 - Finally, I run /spectre:extract to capture any knowledge worth preserving — patterns, gotchas, decisions. This builds institutional memory that loads automatically in future sessions.
 
-## Slash Command Reference
+## 📋 Slash Command Reference
 
 ### Core Workflow
 
@@ -291,7 +291,7 @@ I use /spectre:fix for pretty much all bugs I run into.
 | `/spectre:ux_spec` | UX specification for UI-heavy features |
 | `/spectre:fix` | Investigate bugs & implement fixes |
 
-## Repository Structure
+## 📁 Repository Structure
 
 ```plaintext
 spectre/
@@ -309,6 +309,6 @@ spectre/
 └── CLAUDE.md
 ```
 
-## License
+## 📄 License
 
 MIT
