@@ -2,7 +2,9 @@
 
 **S**cope → **P**lan → **E**xecute → **C**lean → **T**est → **R**ebase → **E**xtract
 
-Get Claude Code to deliver higher quality results while working autonomously for much longer, so you can 100x your output.
+**Get higher quality results from your coding agent, while working autonomously for much longer, so you can make 10-100x your typical output look easy.**
+
+![image.png](./image-1770405411376-0zn8ap.png)
 
 ## Quick Start
 
