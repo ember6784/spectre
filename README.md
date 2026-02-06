@@ -36,7 +36,9 @@ That's it. You just start with 1 command to build features.
 
 AI coding is changing product development, but why is it that Claude Code can still go off the rails? Why is it that some developers claim AI has 100x'd their output, while others still complain about the quality of the code it generates?
 
-Let me introduce you to a very simple concept that you need to drill into your head. With coding agents - **AMBIGUITY IS DEATH**.
+Let me introduce you to a very simple concept that you need to drill into your head. With coding agents:
+
+> ### **AMBIGUITY IS DEATH.**
 
 When the scope, ux, and plan are ambiguous, you must rely on the LLM to fill in the blanks. And while sometimes you can get lucky - especially for smaller features - for any *real* technology or product work, ambiguity is how you end up with spaghetti code, conflicts, and AI slop.
 
@@ -53,6 +55,18 @@ They provide the necessary context, detail, and structure for the agent to ask t
 The better your prompt based workflows, the lower the ambiguity, the more AI can take on, the longer AI can work autonomously, the more easily you can multi-task, and suddenly you are 100x'ing your output.
 
 The path to 100x output is through **structured workflows**.
+
+### So.... Waterfall?  
+
+No its not. Its an entirely new way to build products.
+
+Specificity up front forces clarity, reduces ambiguity, and leads to better 1st pass results.
+
+THEN -- you can iterate on the feature set, ux, architecture, etc. at lightning speed. AI coding agents are 10x better at working around *working* existing code. Its why they are so good at refactors. Because they are working with a working established baseline.
+
+**Worflows make it easier and faster to get to working code.**
+
+From there, you can iterate and adapt before you ship.
 
 ## Background & Philosophy
 
