@@ -23,7 +23,7 @@ $ARGUMENTS
 ### 1a. Determine Output Location
 - `branch_name=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)`
 - **If** user specifies path → `TASK_DIR={that value}`
-- **Else** → `TASK_DIR=docs/active_tasks/{branch_name}`
+- **Else** → `TASK_DIR=docs/tasks/{branch_name}`
 - Ensure dirs exist: `mkdir -p "${TASK_DIR}/specs" "${TASK_DIR}/research" "${TASK_DIR}/clarifications"`
 
 ### 1b. Scan Available Artifacts

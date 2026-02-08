@@ -21,7 +21,7 @@ description: 👻 | Complete cleanup flow - clean, inspect, lint, test - primary
 
 ### Static Variables
 
-- `out_dir`: docs/active_tasks/{branch_name}
+- `out_dir`: docs/tasks/{branch_name}
 - `analysis_dir`: {out_dir}/cleanup_analysis
 - `reports_subdir`: {analysis_dir}/area_reports
 - `validation_subdir`: {analysis_dir}/validations

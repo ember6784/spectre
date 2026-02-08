@@ -41,7 +41,7 @@ description: 👻 | Create implementation plan from PRD - primary agent
 - **Output Location** — DetermineOutputDir: Decide where to save artifacts for this workflow.
   - `branch_name=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)`
   - **If** user specifies `target_dir/path` → `OUT_DIR={that value}`
-  - **Else** → `OUT_DIR=docs/active_tasks/{branch_name}`
+  - **Else** → `OUT_DIR=docs/tasks/{branch_name}`
   - `mkdir -p "OUT_DIR/specs"` && `mkdir -p "OUT_DIR/clarifications"`
 - **Action** — SaveResearch: Save technical research to task context (if newly completed).
   - **If** research was just completed → update `{OUT_DIR}/task_context.md` with a "## Technical Research" section summarizing architecture patterns, dependencies, similar features found, and integration requirements.
