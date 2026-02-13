@@ -50,10 +50,10 @@ Optional scope specification. If ambiguous, ask user to clarify.
 - Document uncertainty clearly; flag items requiring manual review
 - All file paths must be absolute from repository root
 - Focus on artifacts likely created during recent work: unused functions, orphaned imports, commented-out code, debug statements
-- **File safety**: Default filenames (`working_set.json`, `initial_findings.md`, `duplication_report.md`, `naming_report.md`, `cleanup_summary.md`) must never overwrite existing files—if a target exists, create a scoped variant (append scope/task/timestamp) and use that path in messaging.
-- when committing, —no-verify and eslint-disable, or committing code with eslint-disable, is expressly forbidden without the user’s explicit permission. 
+- **File safety**: Default filenames (`working_set.json`, `initial_findings.md`, `duplication_report.md`, `cleanup_summary.md`) must never overwrite existing files—if a target exists, create a scoped variant (append scope/task/timestamp) and use that path in messaging.
+- when committing, —no-verify and eslint-disable, or committing code with eslint-disable, is expressly forbidden without the user's explicit permission.
 
-## Step (1/8) - Determine Working Set Scope
+## Step (1/7) - Determine Working Set Scope
 
 - **Action** — DetermineScope: Identify which files to analyze
   - **If** ARGUMENTS contains `commit_id` or commit SHA:
@@ -90,7 +90,7 @@ Optional scope specification. If ambiguous, ask user to clarify.
   - `mkdir -p "OUT_DIR/{analysis_dir}/{reports_subdir}"`
   - `mkdir -p "OUT_DIR/{analysis_dir}/{validation_subdir}"`
 
-## Step (2/8) - Analyze Working Set for Dead Code Patterns
+## Step (2/7) - Analyze Working Set for Dead Code Patterns
 
 - **Action** — IdentifyDeadCodePatterns: Scan working set files for common dead code indicators
   - **Patterns to detect** (ordered by likelihood after failed branches):
@@ -123,7 +123,7 @@ Optional scope specification. If ambiguous, ask user to clarify.
 - **Action** — SaveInitialFindings: Write to `{analysis_dir}/initial_findings.md` (use a scoped variant like `initial_findings_{timestamp}.md` if the default exists; never overwrite)
   - Include: pattern counts, file list per pattern, investigation priorities
 
-## Step (3/8) - Analyze Duplication & Naming
+## Step (3/7) - Analyze Duplication
 
 - **Action** — DetectDuplication: Find repeated code patterns in working set
 
@@ -156,47 +156,7 @@ Optional scope specification. If ambiguous, ask user to clarify.
     **Effort**: {low|medium|high}
     ```
 
-## Step 4/8 - ESLint Compliance Planning
-
-**Purpose**: Systematically eliminate tech debt from eslint-disable comments.
-
-**3a. Collect ESLint Bypasses**:
-
-```bash
-grep -rn "eslint-disable\|@ts-ignore\|@ts-expect-error" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx"
-```
-
-**3b. Group by Module**: Cluster findings by directory or logical module (files that import each other).
-
-**3c. For each group with ≥2 bypasses**, dispatch @analyst in parallel:
-
-```plaintext
-Analyze ESLint bypasses in: {file_list}
-
-For each bypass:
-1. Identify the disabled rule(s)
-2. Understand WHY it was disabled (type issue? legacy code? third-party types?)
-3. Determine the proper fix (type narrowing, interface update, refactor, etc.)
-
-Output a refactor plan:
-- File: path
-- Line: number
-- Rule: disabled-rule-name
-- Reason: why it exists
-- Fix: specific refactor steps
-- Effort: trivial / moderate / significant
-- Risk: low / medium / high
-```
-
-**3d. Present Refactor Summary**:
-
-- Group by effort level (trivial fixes first)
-- Flag high-risk items for user decision
-- Create actionable items for future cleanup sprints
-
-**Note**: This step is diagnostic. Actual refactoring happens in follow-up tasks, not during clean.
-
-## Step (5/8) - Dispatch Investigation Subagents
+## Step (4/7) - Dispatch Investigation Subagents
 
 - **Action** — PrepareSubagentPrompts: Generate investigation prompts for each chunk
 
@@ -233,7 +193,7 @@ Save your report to: {reports_subdir}/{area_name}_report.md (if that file exists
   - Set output path: `{reports_subdir}/{area_name}_report.md` (or scoped variant if default exists)
 - **Wait** — All investigation subagents complete and save reports
 
-## Step (6/8) - Validate High-Risk Findings
+## Step (5/7) - Validate High-Risk Findings
 
 - **Action** — ConsolidateReports: Read all investigation reports from `{reports_subdir}/`
   - Group findings: SAFE_TO_REMOVE, NEEDS_VALIDATION, KEEP
@@ -267,7 +227,7 @@ Save to: {validation_subdir}/{task_id}_validation.md (if that file exists, appen
 - **Action** — SpawnValidationAgents: Launch validation agents (up to {max_parallel_agents})
 - **Wait** — All validation subagents complete
 
-## Step (7/8) - Generate Removal Tasks
+## Step (6/7) - Generate Removal Tasks, Verify & Commit
 
 - **Action** — ReadValidations: Load validation results from `{validation_subdir}/`
   - Group by verdict: CONFIRMED_SAFE, UNSAFE, UNCERTAIN
@@ -285,24 +245,69 @@ Save to: {validation_subdir}/{task_id}_validation.md (if that file exists, appen
 - **Action** — CreateRemovalTasks: Generate removal task files
   - For each CONFIRMED_SAFE: task with exact removal instructions
   - Save to `{analysis_dir}/removal_tasks/task_{id}.md`
-- **Action** — ReadNextStepsGuide: Read `commands/flow/docs/next_steps_guide.md`
-- **Action** — RenderFooter: End reply with single 60-column Next Steps footer
+- **Action** — PresentFindings: Show user the summary and request approval
   - Present summary: X files analyzed, Y items safe to remove, Z need review
-
-## Step (8/8) - Verify & Commit
-
-- Execute Approved Removals (User-Triggered)
-- Run lint, fix violations
-- Run tests, fix failures or rollback
-- **Action** — CommitPlanningArtifacts: Gather and commit planning/working docs
+  - **Wait** — User approves specific tasks or all CONFIRMED_SAFE items
+- **Action** — ExecuteRemovals: Perform removals sequentially
+  - **If**: User hasn't approved any tasks → Skip execution
+  - **Else**: For each approved task:
+    - File deletion → `rm {file_path}`
+    - Code removal → Use Edit tool to remove lines
+    - Document change in `{analysis_dir}/changes_log.md`
+- **Action** — Verify: Run lint and tests
+  - Run lint, fix violations
+  - Run tests for affected areas
+  - **If**: Tests fail → Rollback change, document failure
+  - **Else**: Confirm removal successful
+- **Action** — CommitPlanningArtifacts: Stage and commit analysis docs
   - Check for uncommitted files in `{out_dir}` and `{analysis_dir}`:
     - `working_set.json`, `initial_findings.md`, `duplication_report.md`
-    - `naming_report.md`, `cleanup_summary.md`
+    - `cleanup_summary.md`
     - Area reports in `{reports_subdir}/`
     - Validation reports in `{validation_subdir}/`
     - Any other `.md` or `.json` artifacts created during this flow
   - **If** uncommitted planning artifacts exist:
     - Stage all: `git add {out_dir}/ {analysis_dir}/`
     - Commit: `docs(clean): add cleanup analysis artifacts for {branch_name}`
-- Commit code changes by type (chore/refactor/fix/test), conventional format
-- Render Next Steps via `@skill-spectre:spectre-next-steps`
+- **Action** — CommitCodeChanges: Commit removals by type (chore/refactor/fix/test), conventional format
+- **Action** — RenderFooter: Render Next Steps via `@skill-spectre:spectre-next-steps`
+
+## Step (7/7) - ESLint Compliance Planning
+
+**Purpose**: Systematically identify tech debt from eslint-disable comments in the working set.
+
+**7a. Collect ESLint Bypasses**:
+
+```bash
+grep -rn "eslint-disable\|@ts-ignore\|@ts-expect-error" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx"
+```
+
+**7b. Group by Module**: Cluster findings by directory or logical module (files that import each other).
+
+**7c. For each group with ≥2 bypasses**, dispatch @analyst in parallel:
+
+```plaintext
+Analyze ESLint bypasses in: {file_list}
+
+For each bypass:
+1. Identify the disabled rule(s)
+2. Understand WHY it was disabled (type issue? legacy code? third-party types?)
+3. Determine the proper fix (type narrowing, interface update, refactor, etc.)
+
+Output a refactor plan:
+- File: path
+- Line: number
+- Rule: disabled-rule-name
+- Reason: why it exists
+- Fix: specific refactor steps
+- Effort: trivial / moderate / significant
+- Risk: low / medium / high
+```
+
+**7d. Present Refactor Summary**:
+
+- Group by effort level (trivial fixes first)
+- Flag high-risk items for user decision
+- Create actionable items for future cleanup sprints
+
+**Note**: This step is diagnostic. Actual refactoring happens in follow-up tasks, not during clean.
