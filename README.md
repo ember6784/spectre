@@ -21,7 +21,7 @@ It has been tested on brand new codebases and codebases with hundreds of thousan
 ```bash
 # Add marketplace and install
 /plugin marketplace add Codename-Inc/spectre
-/plugin install SPECTRE@codename
+/plugin install spectre@codename
 ```
 
 Then start building:
