@@ -8,7 +8,7 @@ user-invocable: false
 
 ## Why This Exists
 
-This project has captured knowledge — patterns, gotchas, decisions, and feature context — from previous sessions. This knowledge:
+SPECTRE captures knowledge — patterns, gotchas, decisions, and feature context — across sessions. This knowledge:
 
 - **Prevents repeated mistakes** — gotchas you've already debugged
 - **Maintains consistency** — decisions and patterns the team has established
@@ -27,6 +27,8 @@ If ANY entry's triggers or description match your current task, you MUST load th
 The registry tells you exactly where relevant knowledge is. Loading it first makes you faster and more accurate.
 
 DO NOT search the codebase or dispatch agents BEFORE loading relevant knowledge—even if you think you already have enough context. Partial context from Read results or error messages is not a substitute for the complete picture in the skill.
+
+**When a command explicitly tells you to load a skill, you MUST call the Skill tool to load it.** Do not improvise the workflow based on what you think the skill does. The skill defines a specific workflow with precise steps, output formats, file locations, and integrations. Your improvised version will be wrong — you will miss output paths, registration steps, format requirements, or downstream integrations that only the skill knows about.
 
 **You are also responsible for keeping knowledge current.** After completing significant work — implementing features, fixing bugs, discovering gotchas, making architectural decisions, or changing patterns — you MUST proactively check whether any loaded skills need updating, and whether new skills should be captured.
 
@@ -92,6 +94,9 @@ When you finish a task that touched areas covered by loaded skills, **the skills
 | "This is really about X, not Y" | Don't reframe the user's words. If they said "release," match against "release"—not your interpretation of the underlying concern. |
 | "I have the exact files I'm editing" | File contents ≠ architectural context. Skills tell you related files, patterns across the codebase, and what you don't know you don't know. |
 | "The edit is surgical/mechanical" | Surgical edits in isolation risk inconsistency. Skills reveal if similar changes are needed elsewhere. |
+| "I already know how to do this" | You know the concept, not the specific workflow. The skill has precise steps, output formats, file locations, and integrations that differ from what you'd improvise. Load it. |
+| "I understand the intent, I don't need the skill" | Understanding intent ≠ knowing the implementation. Skills define WHERE files go, WHAT format to use, and HOW to register outputs. Improvising skips all of this. |
+| "The command says to load a skill, but I can handle it directly" | No. When a command tells you to load a skill, that is a mandatory Skill tool call, not a suggestion. The skill IS the workflow. |
 | "I'll update the skill later" | Later never comes. Update before moving to the next task. |
 | "The user didn't ask me to update knowledge" | You don't need permission. Keeping skills current is part of the job. |
 | "The change was small" | Small changes accumulate into large drift. Update now. |
@@ -135,6 +140,18 @@ When you finish a task that touched areas covered by loaded skills, **the skills
 - Awareness of the artifact system and how commits are structured
 
 **The lesson**: Having file contents is not the same as having architectural context. The skill tells you what you don't know you don't know—related files, patterns across commands, conventions. A "surgical" edit without skill context risks being inconsistent with the broader system.
+
+## Real Failure Example #4
+
+**Task**: `/spectre:learn how the cxo plugin/system works e2e`
+
+**Rationalization**: "I see the topic ('how the cxo plugin works'). I have memory files and a codebase to analyze. I know what 'learning' means — analyze and capture knowledge. I can do this directly without loading the skill."
+
+**What happened**: Skipped calling `Skill(spectre:spectre-learn)` despite the command explicitly saying "Load the spectre-learn skill and follow its instructions." Instead, the agent launched its own analyst subagent, wrote knowledge to the wrong location (auto memory instead of project skills), used the wrong format, and missed the registry integration entirely.
+
+**What the skill would have provided**: The exact capture workflow — categorize the knowledge, propose it to the user, write the skill file to `.claude/skills/{category}-{slug}/SKILL.md`, register it in the registry, and regenerate the recall skill. None of this was improvised correctly.
+
+**The lesson**: "I understand the intent" is the most dangerous rationalization because it feels true. You DO understand what "learn" means conceptually. But the skill defines a 5-step workflow with specific file paths, a registry format, a recall skill regeneration step, and user confirmation gates. Understanding the concept gave the agent zero of this. When a command says "load skill X," that is not a hint — it is a mandatory `Skill()` tool call.
 
 ## Example
 

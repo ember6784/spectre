@@ -42,39 +42,34 @@ def main():
     project_dir = Path.cwd()
     plugin_root = Path(os.environ.get('CLAUDE_PLUGIN_ROOT', ''))
 
-    # Paths - check new name first, fall back to old names for migration
-    registry_path = project_dir / ".claude" / "skills" / "spectre-recall" / "references" / "registry.toon"
-    old_registry_path = project_dir / ".claude" / "skills" / "spectre-find" / "references" / "registry.toon"
     apply_skill_path = plugin_root / "skills" / "spectre-apply" / "SKILL.md"
-
-    # Support old "spectre-find" path for projects that haven't migrated
-    if not registry_path.exists():
-        if old_registry_path.exists():
-            registry_path = old_registry_path
-        else:
-            sys.exit(0)
 
     if not apply_skill_path.exists():
         sys.exit(0)
 
-    # Read registry
-    registry_content = registry_path.read_text().strip()
-    lines = registry_content.split('\n') if registry_content else []
+    # Paths - check new name first, fall back to old names for migration
+    registry_path = project_dir / ".claude" / "skills" / "spectre-recall" / "references" / "registry.toon"
+    old_registry_path = project_dir / ".claude" / "skills" / "spectre-find" / "references" / "registry.toon"
 
-    # Count entries
-    entry_count = count_registry_entries(lines)
+    # Support old "spectre-find" path for projects that haven't migrated
+    if not registry_path.exists() and old_registry_path.exists():
+        registry_path = old_registry_path
 
-    if entry_count == 0:
-        sys.exit(0)
+    # Read registry if it exists
+    registry_content = ""
+    entry_count = 0
+    if registry_path.exists():
+        registry_content = registry_path.read_text().strip()
+        lines = registry_content.split('\n') if registry_content else []
+        entry_count = count_registry_entries(lines)
 
     # Read apply skill and strip frontmatter
     apply_content = apply_skill_path.read_text()
     apply_content = strip_frontmatter(apply_content)
 
-    # Replace the Registry Location section with embedded registry
-    # The apply skill has a section that tells you to read the registry file
-    # We replace that with the actual registry content
-    registry_section = f"""## Registry
+    # Replace the Registry Location section with embedded registry or empty notice
+    if entry_count > 0:
+        registry_section = f"""## Registry
 
 **Format**: `skill-name|category|triggers|description`
 
@@ -83,6 +78,14 @@ def main():
 ```
 
 Each entry corresponds to a skill that can be loaded via `Skill({{skill-name}})`
+
+**Categories:** feature, gotchas, patterns, decisions, procedures, integration, performance, testing, ux, strategy"""
+    else:
+        registry_section = """## Registry
+
+No knowledge has been captured for this project yet. The behavioral rules in this document still apply.
+
+To capture knowledge from this session, use `/spectre:learn` after completing significant work.
 
 **Categories:** feature, gotchas, patterns, decisions, procedures, integration, performance, testing, ux, strategy"""
 
@@ -98,7 +101,10 @@ Each entry corresponds to a skill that can be loaded via `Skill({{skill-name}})`
     context = f"<spectre-knowledge>\n{apply_content}\n</spectre-knowledge>"
 
     # Visible notice
-    visible_notice = f"👻 spectre: {entry_count} knowledge skills available"
+    if entry_count > 0:
+        visible_notice = f"👻 spectre: {entry_count} knowledge skills available"
+    else:
+        visible_notice = "👻 spectre: ready — capture knowledge with /spectre:learn"
 
     output = {
         "systemMessage": visible_notice,

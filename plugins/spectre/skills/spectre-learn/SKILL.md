@@ -522,41 +522,83 @@ user-invocable: false
 
 ### 13. Register the Learning
 
-After writing the skill file, register it by calling the register script:
-
-```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/register_learning.py" \
-  --project-root "{{project_root}}" \
-  --skill-name "{skill-name}" \
-  --category "{category}" \
-  --triggers "{triggers}" \
-  --description "{description}"
-```
-
-This updates the registry and regenerates the recall skill at `.claude/skills/spectre-recall/`.
+After writing the skill file, register it in the project registry and regenerate the recall skill. This is two file operations — no external scripts needed.
 
 <CRITICAL>
 **Registry description format:**
 
-The `--description` parameter is used to MATCH knowledge to tasks. It must describe WHEN to use the knowledge, not what it contains.
+The description is used to MATCH knowledge to tasks. It must describe WHEN to use the knowledge, not what it contains.
 
 - MUST start with "Use when..."
 - Describes triggering CONDITIONS
 - Focuses on tasks/scenarios that need this knowledge
 
-**Good descriptions:**
-- `"Use when modifying spectre plugin, debugging hooks, or adding knowledge categories"`
-- `"Use when auth fails silently or tokens expire unexpectedly"`
-- `"Use when adding new API endpoints or modifying request handling"`
-
-**Bad descriptions:**
-- `"spectre plugin architecture - how knowledge capture works"` (describes content, not when to use)
-- `"Authentication system overview"` (too vague, no triggering conditions)
-- `"API patterns"` (no actionable context)
+**Good**: `"Use when modifying spectre plugin, debugging hooks, or adding knowledge categories"`
+**Good**: `"Use when auth fails silently or tokens expire unexpectedly"`
+**Bad**: `"spectre plugin architecture"` (describes content, not when to use)
+**Bad**: `"Authentication system overview"` (too vague, no triggering conditions)
 </CRITICAL>
+
+#### 13a. Update the Registry
+
+**Path**: `{{project_root}}/.claude/skills/spectre-recall/references/registry.toon`
+
+Create the directory and file if they don't exist. The registry format is one entry per line:
+
+```
+# SPECTRE Knowledge Registry
+# Format: skill-name|category|triggers|description
+
+{skill-name}|{category}|{triggers}|{description}
+```
+
+- If the skill-name already exists on a line, **replace** that line with the updated entry
+- If it's new, **append** the entry
+- Preserve existing entries and comments
+
+#### 13b. Regenerate the Recall Skill
+
+**Path**: `{{project_root}}/.claude/skills/spectre-recall/SKILL.md`
+
+Read the full registry content from `registry.toon`, then write the recall skill with this exact structure:
+
+```markdown
+---
+name: spectre-recall
+description: Use when user wants to search for existing knowledge, recall a specific learning, or discover what knowledge is available.
+---
+
+# Recall Knowledge
+
+Search and load relevant knowledge from the project's spectre learnings into your context.
+
+## Registry
+
+{full registry content here}
+
+## How to Use
+
+1. **Scan registry above** — match triggers/description against your current task
+2. **Load matching skills**: `Skill({skill-name})`
+3. **Apply knowledge** — use it to guide your approach
+
+## Search Commands
+
+- `/recall {query}` — search registry for matches
+- `/recall` — show all available knowledge by category
+
+## Workflow
+
+**Single match** → Load automatically via `Skill({skill-name})`
+
+**Multiple matches** → List options, ask user which to load
+
+**No matches** → Suggest `/learn` to capture new knowledge
+```
 
 ### 14. Confirm
 
 ```
 Saved .claude/skills/{skill-name}/SKILL.md
+Registered in .claude/skills/spectre-recall/references/registry.toon
 ```

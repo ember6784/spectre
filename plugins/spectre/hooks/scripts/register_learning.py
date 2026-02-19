@@ -124,8 +124,14 @@ def main():
     registry_path = registry_dir / "registry.toon"
     recall_skill_path = recall_dir / "SKILL.md"
 
-    # Template is in the plugin
-    plugin_root = Path(os.environ.get('CLAUDE_PLUGIN_ROOT', ''))
+    # Template is in the plugin — resolve via env var (hooks) or __file__ (manual invocation)
+    plugin_root_env = os.environ.get('CLAUDE_PLUGIN_ROOT')
+    if plugin_root_env:
+        plugin_root = Path(plugin_root_env)
+    else:
+        # Fallback: resolve relative to this script
+        # Script is at: <plugin_root>/hooks/scripts/register_learning.py
+        plugin_root = Path(__file__).resolve().parent.parent.parent
     template_path = plugin_root / "skills" / "spectre-learn" / "references" / "recall-template.md"
 
     # Ensure directories exist
