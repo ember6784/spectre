@@ -133,15 +133,21 @@ Workflow:
 
 ### Releasing to Users
 
-1. **Bump version in TWO files** (or use `npm run release`):
-   - `plugins/spectre/.claude-plugin/plugin.json`
-   - `.claude-plugin/marketplace.json`
-2. **Commit and push** to GitHub
-3. **Tag the release** (optional but recommended)
+Run the LLM-led release command:
 
 ```bash
-git add -A && git commit -m "release: v2.0.0" && git tag v2.0.0 && git push && git push --tags
+/release          # interactive — asks for patch/minor/major
+/release patch    # skip the prompt
 ```
+
+This handles the full flow:
+1. Commits any dirty working tree changes with a descriptive message
+2. Bumps version in both `plugins/spectre/.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`
+3. Commits the version bump as `release: vX.Y.Z`
+4. Generates a changelog from commits since the last tag
+5. Tags, pushes, and creates a GitHub release with the changelog
+
+The release command is defined in `.claude/commands/release.md`.
 
 Users update via:
 ```bash
