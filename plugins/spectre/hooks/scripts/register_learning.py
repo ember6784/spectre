@@ -22,9 +22,10 @@ import argparse
 import os
 import sys
 from pathlib import Path
+from typing import List
 
 
-def get_registry_header() -> list[str]:
+def get_registry_header() -> List[str]:
     """Return header lines for a new registry."""
     return [
         "# SPECTRE Knowledge Registry",

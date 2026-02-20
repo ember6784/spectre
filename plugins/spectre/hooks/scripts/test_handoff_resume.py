@@ -62,8 +62,8 @@ def setup_git_repo(tmp_path: Path, branch: str = "main") -> Path:
 class TestHandoffResume:
     """Test the consolidated handoff-resume hook script."""
 
-    def test_no_session_dir_exits_silently(self, tmp_path, monkeypatch):
-        """When session_logs directory doesn't exist, exit silently with no output."""
+    def test_no_session_dir_shows_welcome_banner(self, tmp_path, monkeypatch):
+        """When session_logs directory doesn't exist, show welcome banner."""
         monkeypatch.chdir(tmp_path)
         # No docs/tasks/{branch}/session_logs exists
 
@@ -75,10 +75,14 @@ class TestHandoffResume:
         )
 
         assert result.returncode == 0
-        assert result.stdout.strip() == ""
+        output = json.loads(result.stdout)
+        assert "systemMessage" in output
+        assert "/spectre:scope" in output["systemMessage"]
+        assert "/spectre:handoff" in output["systemMessage"]
+        assert "/spectre:forget" in output["systemMessage"]
 
-    def test_no_handoff_files_exits_silently(self, tmp_path, monkeypatch):
-        """When session_logs exists but has no handoff files, exit silently."""
+    def test_no_handoff_files_shows_welcome_banner(self, tmp_path, monkeypatch):
+        """When session_logs exists but has no handoff files, show welcome banner."""
         monkeypatch.chdir(tmp_path)
         session_dir = setup_git_repo(tmp_path)
         # session_dir exists but is empty (no handoff files)
@@ -91,7 +95,9 @@ class TestHandoffResume:
         )
 
         assert result.returncode == 0
-        assert result.stdout.strip() == ""
+        output = json.loads(result.stdout)
+        assert "systemMessage" in output
+        assert "/spectre:scope" in output["systemMessage"]
 
     def test_finds_latest_handoff_by_timestamp(self, tmp_path, monkeypatch):
         """Should find the most recently modified handoff file."""
@@ -374,9 +380,11 @@ class TestHandoffResume:
             cwd=tmp_path
         )
 
-        # Should exit silently - no active sessions
+        # Should show welcome banner - no active sessions to resume
         assert result.returncode == 0
-        assert result.stdout.strip() == ""
+        output = json.loads(result.stdout)
+        assert "systemMessage" in output
+        assert "/spectre:scope" in output["systemMessage"]
 
 
 class TestV11SchemaFields:

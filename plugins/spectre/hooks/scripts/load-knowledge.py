@@ -17,9 +17,10 @@ import os
 import re
 import sys
 from pathlib import Path
+from typing import List
 
 
-def count_registry_entries(lines: list[str]) -> int:
+def count_registry_entries(lines: List[str]) -> int:
     """Count registry entries (lines with | that aren't comments)."""
     return sum(
         1 for line in lines
@@ -39,7 +40,7 @@ def strip_frontmatter(content: str) -> str:
 
 def main():
     """Main entry point for SessionStart hook."""
-    project_dir = Path.cwd()
+    project_dir = Path(os.environ.get('CLAUDE_PROJECT_DIR', os.getcwd()))
     plugin_root = Path(os.environ.get('CLAUDE_PLUGIN_ROOT', ''))
 
     apply_skill_path = plugin_root / "skills" / "spectre-apply" / "SKILL.md"

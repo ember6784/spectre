@@ -20,12 +20,13 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import Dict, List, Optional
 
 # Timeout for reading stdin (seconds)
 STDIN_TIMEOUT = 2
 
 
-def read_stdin_with_timeout(timeout: float = STDIN_TIMEOUT) -> str | None:
+def read_stdin_with_timeout(timeout: float = STDIN_TIMEOUT) -> Optional[str]:
     """Read stdin with a timeout to avoid blocking indefinitely."""
     if select.select([sys.stdin], [], [], timeout)[0]:
         return sys.stdin.read()
@@ -126,7 +127,7 @@ def get_git_branch() -> str:
     return "unknown"
 
 
-def find_latest_handoff(session_dir: Path) -> Path | None:
+def find_latest_handoff(session_dir: Path) -> Optional[Path]:
     """Find the most recently modified handoff JSON in session_logs (not archive)."""
     if not session_dir.exists():
         return None
@@ -142,7 +143,7 @@ def find_latest_handoff(session_dir: Path) -> Path | None:
     return handoff_files[0]
 
 
-def find_latest_todos(session_dir: Path) -> dict | None:
+def find_latest_todos(session_dir: Path) -> Optional[dict]:
     """Find the most recently modified todos JSON in session_logs."""
     if not session_dir.exists():
         return None
@@ -160,7 +161,7 @@ def find_latest_todos(session_dir: Path) -> dict | None:
         return None
 
 
-def load_todos_history(session_dir: Path) -> dict | None:
+def load_todos_history(session_dir: Path) -> Optional[dict]:
     """Load accumulated todos history."""
     history_file = session_dir / "todos_history.json"
     if history_file.exists():
@@ -306,9 +307,9 @@ def build_checkbox_tree(tasks: list) -> str:
 
 def format_context(
     data: dict,
-    todos: dict | None = None,
-    history: dict | None = None,
-    handoff_path: str | None = None
+    todos: Optional[dict] = None,
+    history: Optional[dict] = None,
+    handoff_path: Optional[str] = None
 ) -> dict:
     """Format handoff data into hook output structure."""
     # Extract fields with defaults
@@ -482,7 +483,7 @@ def format_context(
     }
 
 
-def merge_todos_into_handoff(handoff_path: Path, todos: dict, history: dict | None):
+def merge_todos_into_handoff(handoff_path: Path, todos: dict, history: Optional[dict]):
     """Merge todos into handoff.json for observability. Runs in background."""
     try:
         with open(handoff_path, 'r') as f:
@@ -547,7 +548,25 @@ def main():
     latest_handoff = find_latest_handoff(session_dir)
 
     if not latest_handoff:
-        # No session to resume - exit silently
+        # No session to resume - show welcome banner with tips
+        ascii_banner = "\n".join([
+            "",
+            "░█▀▀░█▀█░█▀▀░█▀▀░▀█▀░█▀▄░█▀▀",
+            "░▀▀█░█▀▀░█▀▀░█░░░░█░░█▀▄░█▀▀",
+            "░▀▀▀░▀░░░▀▀▀░▀▀▀░░▀░░▀░▀░▀▀▀",
+        ])
+        tips = "\n".join([
+            "",
+            "⚙️  Turn off auto-compact in settings — SPECTRE works best with manual context management",
+            "💾  Use /spectre:handoff when context is getting full but you're still going — saves state for the next session",
+            "🧹  Use /spectre:forget to clear session memory and start fresh",
+            "🚀  Use /spectre:scope to start building features with the full SPECTRE workflow",
+        ])
+        welcome = {
+            "systemMessage": ascii_banner + "\n" + tips
+        }
+        print(json.dumps(welcome))
+        sys.stdout.flush()
         sys.exit(0)
 
     # Read and parse handoff JSON

@@ -20,12 +20,13 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 # Timeout for reading stdin (seconds)
 STDIN_TIMEOUT = 2
 
 
-def read_stdin_with_timeout(timeout: float = STDIN_TIMEOUT) -> str | None:
+def read_stdin_with_timeout(timeout: float = STDIN_TIMEOUT) -> Optional[str]:
     """Read stdin with a timeout to avoid blocking indefinitely."""
     # Check if stdin has data available
     if select.select([sys.stdin], [], [], timeout)[0]:
