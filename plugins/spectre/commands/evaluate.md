@@ -47,4 +47,4 @@ When the learn flow completes:
 2. **If finished**: Present the architecture review report to the user
 3. **If still running**: Let the user know they can check back later or continue working
 
-- **Action** — RenderFooter: Use @skill-spectre:spectre-next-steps for Next Steps
+- **Action** — RenderFooter: Use @skill-spectre:spectre-guide for Next Steps

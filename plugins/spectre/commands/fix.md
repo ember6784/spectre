@@ -58,4 +58,4 @@ description: Investigate bugs & implement fixes - primary agent
 
 ## Next Steps
 
-Use the spectre-next-steps Skills and render the Next Steps Footer per the skill guidance
+Use the spectre-guide Skills and render the Next Steps Footer per the skill guidance

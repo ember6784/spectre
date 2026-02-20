@@ -167,4 +167,4 @@ Use research findings from Step 1 to determine appropriate planning depth.
 
 ---
 
-- **Action** — RenderFooter: Use `@skill-spectre:spectre-next-steps` skill for Next Steps
+- **Action** — RenderFooter: Use `@skill-spectre:spectre-guide` skill for Next Steps

@@ -114,6 +114,6 @@ Collaborative workflow for structuring unstructured thoughts into clear scope bo
   >
   > Reply with any edits, updates, or clarifications — otherwise pick a next step:
 
-- **Action** — RenderFooter: Render Next Steps using `@skill-spectre:spectre-next-steps` skill.
+- **Action** — RenderFooter: Render Next Steps using `@skill-spectre:spectre-guide` skill.
 
   > **NOTE**: Do NOT wait for explicit approval. Present next steps immediately inline with the review. User can reply with scope edits OR jump straight into a next step command. If user replies with edits, apply them to the scope doc and re-present.

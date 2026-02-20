@@ -114,4 +114,4 @@ Dynamically generate up to 10 technical questions based on research findings. **
 
   > "🎯 Implementation Planning Complete. Documents: {plan_path}, task_context.md"
 
-- **Action** — RenderFooter: Use `@skill-spectre:spectre-next-steps` skill for Next Steps footer
+- **Action** — RenderFooter: Use `@skill-spectre:spectre-guide` skill for Next Steps footer

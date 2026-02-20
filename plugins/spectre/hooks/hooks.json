@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/precompact-warning.py"
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/precompact-warning.cjs"
           }
         ]
       }
@@ -17,21 +17,15 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/handoff-resume.py"
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/bootstrap.cjs"
           },
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/load-knowledge.py"
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/handoff-resume.cjs"
+          },
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/capture-todos.py"
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/load-knowledge.cjs"
           }
         ]
       }

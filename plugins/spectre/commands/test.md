@@ -325,11 +325,11 @@ describe('UserCreated event contract', () => {
   - Format: `type(scope): description`
   - Each commit answers: What changed and why?
 
-- **Action** — RenderFooter: Render Next Steps footer using `@skill-spectre:spectre-next-steps` skill (contains format template and spectre command options)
+- **Action** — RenderFooter: Render Next Steps footer using `@skill-spectre:spectre-guide` skill (contains format template and spectre command options)
 
 ## Next Steps
 
-See `@skill-spectre:spectre-next-steps` skill for footer format and command options.
+See `@skill-spectre:spectre-guide` skill for footer format and command options.
 
 ## Success Criteria
 

@@ -371,4 +371,4 @@ Save to `${TASKS_FILE}`:
 
 ### 6c. Next Steps Footer
 
-Action — RenderFooter: Use @skill-spectre:spectre-next-steps skill for Next Steps footer
+Action — RenderFooter: Use @skill-spectre:spectre-guide skill for Next Steps footer

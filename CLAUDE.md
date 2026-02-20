@@ -28,7 +28,7 @@ spectre/
 
 ```bash
 # Run hook tests
-pytest plugins/spectre/hooks/scripts/ -v
+node --test plugins/spectre/hooks/scripts/test_*.cjs
 ```
 
 > **CLI for Other Agents**: See [spectre-labs/cli](https://github.com/Codename-Inc/spectre-labs/tree/main/cli)
@@ -84,9 +84,9 @@ Session state is stored in `.spectre/` (gitignored).
 
 ### Modifying Hooks
 
-Update Python scripts in `plugins/spectre/hooks/scripts/`. Hooks must:
-- Use `os.fork()` for non-blocking execution
-- Use only Python 3 standard library
+Update Node.js scripts (`.cjs`) in `plugins/spectre/hooks/scripts/`. Hooks must:
+- Use `child_process.fork()` with `{detached: true, stdio: 'ignore'}` + `.unref()` for non-blocking execution
+- Use only Node.js built-in modules (no external dependencies)
 - Return valid JSON to stdout
 
 ## Key Patterns
@@ -97,13 +97,14 @@ Every command ends with contextual "Next Steps" suggestions grounded in actual c
 
 ### Hook Non-Blocking Pattern
 
-```python
-pid = os.fork()
-if pid == 0:
-    do_work()
-    os._exit(0)
-else:
-    sys.exit(0)
+```javascript
+const { fork } = require('child_process');
+const child = fork(__filename, ['--bg-taskname', ...args], {
+  detached: true,
+  stdio: 'ignore'
+});
+child.unref();
+process.exit(0);
 ```
 
 ## Plugin Development & Release
@@ -160,4 +161,4 @@ Users update via:
 - Commands use `/spectre:` prefix (e.g., `/spectre:scope`)
 - Session memory commands: `/spectre:handoff`, `/spectre:forget`
 - Session state lives in `.spectre/` (gitignored)
-- `os.fork()` is Unix-only
+- Hook scripts use `.cjs` extension (CommonJS) since root `package.json` has `"type": "module"`

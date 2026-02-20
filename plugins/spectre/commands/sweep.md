@@ -79,4 +79,4 @@ Group changes into logical conventional commits. Commits are project history and
 
 ### 8. Render Footer
 
-Use `@skill-spectre:spectre-next-steps` skill for Next Steps footer.
+Use `@skill-spectre:spectre-guide` skill for Next Steps footer.

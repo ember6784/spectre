@@ -336,7 +336,7 @@ When verifying any implementation:
   >
   > {1-2 sentence summary of key findings}
 
-- **Action** — RenderFooter: Render Next Steps footer using `@spectre:spectre` skill
+- **Action** — RenderFooter: Render Next Steps footer using `@skill-spectre:spectre-guide` skill
 
 ## Next Steps
 

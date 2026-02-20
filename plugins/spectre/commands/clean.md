@@ -270,7 +270,7 @@ Save to: {validation_subdir}/{task_id}_validation.md (if that file exists, appen
     - Stage all: `git add {out_dir}/ {analysis_dir}/`
     - Commit: `docs(clean): add cleanup analysis artifacts for {branch_name}`
 - **Action** — CommitCodeChanges: Commit removals by type (chore/refactor/fix/test), conventional format
-- **Action** — RenderFooter: Render Next Steps via `@skill-spectre:spectre-next-steps`
+- **Action** — RenderFooter: Render Next Steps via `@skill-spectre:spectre-guide`
 
 ## Step (7/7) - ESLint Compliance Planning
 

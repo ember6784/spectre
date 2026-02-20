@@ -84,4 +84,4 @@ $ARGUMENTS
   - **Task Evolution Summary**: Adaptations made (or "None - original plan executed")
   - **E2E Gaps Addressed**: Summary of completeness issues found and resolved
 
-- **Action** — RenderFooter: Use `@skill-spectre:spectre-next-steps` skill for Next Steps
+- **Action** — RenderFooter: Use `@skill-spectre:spectre-guide` skill for Next Steps
